@@ -16,12 +16,23 @@ class Client
         puts "You are in #{@player.room['desc']}"
         @cmd['mobs'].call
         @cmd['items'].call
+        @cmd['doors'].call
+      },
+      'cd' => lambda { |room_name|
+        room = @db.find_room(room_name)
+        @player.room = room if room
+      },
+      'doors' => lambda {
+        puts "doors: #{@db.list_doors_in_room(@player.room['name'])}"
       },
       'items' => lambda {
         puts "items: #{@db.list_items_in_room(@player.room['name'])}"
       },
       'mobs' => lambda {
         puts "mobs: #{@db.list_mobs_in_room(@player.room['name'])}"
+      },
+      'create_room' => lambda { |name,desc|
+        @db.create_room(name, desc)
       },
       'create_mob' => lambda { |name,desc|
         @db.create_mob(name, desc)

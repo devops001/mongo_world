@@ -20,11 +20,14 @@ class Database
     @mobs.remove()
   end
 
+  def starting_room_name
+    'the waiting room'
+  end
+
   def starting_room
-    name = 'starting_room'
-    room = @rooms.find_one({'name'=>name})
+    room = @rooms.find_one({'name'=>starting_room_name})
     if not room
-      id   = create_room(name, "a small white room")
+      id   = create_room(starting_room_name, "a small white room")
       room = @rooms.find_one(id)
     end
     room
@@ -50,8 +53,18 @@ class Database
   ## CREATE
   #########################
 
-  def create_room(name, desc, mobs=[], items=[])
-    @rooms.insert({'name'=>name, 'desc'=>desc, 'mobs'=>mobs, 'items'=>items})
+  def create_room(name, desc, doors=[], mobs=[], items=[])
+    # make sure that there is at least one door to this room:
+    if name != starting_room_name and doors.count < 1
+      doors << starting_room_name
+    end 
+    # add doors in joined rooms back to this one:
+    doors.each do |joined_room_name|
+      joined_room = find_room(joined_room_name)
+      joined_room['doors'] << name
+      @rooms.save(joined_room) 
+    end
+    @rooms.insert({'name'=>name, 'desc'=>desc, 'mobs'=>mobs, 'items'=>items, 'doors'=>doors})
   end
 
   def create_item(name, desc)
@@ -92,6 +105,14 @@ class Database
   def list_mobs_in_room(room_name, attr='name')
     room = find_room(room_name)
     room['mobs'].map{|mob| mob[attr]}.join(', ')
+  end
+
+  def list_doors_in_room(room_name)
+    rooms = []
+    find_room(room_name)['doors'].each do |door_name|
+      rooms << find_room(door_name)
+    end
+    rooms.map{|room| room['name']}.join(', ')
   end
 
 end
