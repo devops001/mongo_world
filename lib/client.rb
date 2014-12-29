@@ -7,13 +7,14 @@ require_relative 'player'
 class Client
 
   def initialize
-    @db       = Database.new
-    @player   = Player.new(@db.starting_room)
-    @commands = {
+    @db     = Database.new
+    @player = Player.new(@db.starting_room)
+    @cmd    = {
       'exit' => lambda { exit 0 },
       'look' => lambda { puts "you see #{@player.room['desc']}" }
     }
-    @commands['quit'] = @commands['exit']
+    @cmd['quit'] = @cmd['exit']
+    @cmd['ls']   = @cmd['look']
   end
 
   def prompt
@@ -26,8 +27,8 @@ class Client
       line = $stdin.gets.strip
       cmd, *args = Shellwords.shellsplit(line)
       next if cmd.nil?
-      if @commands[cmd]
-        @commands[cmd].call(*args)
+      if @cmd[cmd]
+        @cmd[cmd].call(*args)
       else
         puts "unknown command: #{line}"
       end
