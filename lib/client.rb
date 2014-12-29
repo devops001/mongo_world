@@ -8,7 +8,7 @@ class Client
 
   def initialize
     @db     = Database.new
-    @player = Player.new(@db.starting_room)
+    @player = Player.new(@db)
     @cmd    = {
       'exit' => lambda { exit 0 },
       'look' => lambda { 
@@ -18,19 +18,29 @@ class Client
         @cmd['items'].call
       },
       'items' => lambda {
-        items = @player.room['items']
-        puts "items: #{items.join(', ')}" if items.count > 0
+        puts "items: #{@db.list_items_in_room(@player.room['name'])}"
       },
       'mobs' => lambda {
-        mobs  = @player.room['mobs']
-        puts "mobs: #{mobs.join(', ')}" if mobs.count > 0
+        puts "mobs: #{@db.list_mobs_in_room(@player.room['name'])}"
       },
-      'addroom' => lambda { |*args|
-        puts "adding room with args: #{args}"
+      'create_mob' => lambda { |name,desc|
+        @db.create_mob(name, desc)
+      },
+      'create_item' => lambda { |name,desc|
+        @db.create_item(name, desc)  
+      },
+      'add_mob' => lambda { |mob_name|
+        @db.add_mob(@player.room['name'], mob_name)
+      },
+      'add_item' => lambda { |item_name|
+        @db.add_item(@player.room['name'], item_name)
       }
     }
     @cmd['quit'] = @cmd['exit']
     @cmd['ls']   = @cmd['look']
+    @cmd['help'] = lambda {
+      puts "Commands: #{@cmd.keys.sort.join(', ')}"
+    }
   end
 
   def prompt
