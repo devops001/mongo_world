@@ -20,10 +20,14 @@ class Database
     name = "starting_room"
     room = @rooms.find_one({:name => name})
     if not room
-       @rooms.insert({:name => name, :desc => "a small white room"})
-      room = @rooms.find_one({:name => name})
+      id   = create_room(name, "a small white room")
+      room = @rooms.find_one(id)
     end
     room
+  end
+
+  def create_room(name, desc, mobs=[], items=[])
+    @rooms.insert({:name=>name, :desc=>desc, :mobs=>mobs, :items=>items})
   end
 end
 

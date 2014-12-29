@@ -11,7 +11,23 @@ class Client
     @player = Player.new(@db.starting_room)
     @cmd    = {
       'exit' => lambda { exit 0 },
-      'look' => lambda { puts "you see #{@player.room['desc']}" }
+      'look' => lambda { 
+        puts
+        puts "You are in #{@player.room['desc']}"
+        @cmd['mobs'].call
+        @cmd['items'].call
+      },
+      'items' => lambda {
+        items = @player.room['items']
+        puts "items: #{items.join(', ')}" if items.count > 0
+      },
+      'mobs' => lambda {
+        mobs  = @player.room['mobs']
+        puts "mobs: #{mobs.join(', ')}" if mobs.count > 0
+      },
+      'addroom' => lambda { |*args|
+        puts "adding room with args: #{args}"
+      }
     }
     @cmd['quit'] = @cmd['exit']
     @cmd['ls']   = @cmd['look']
