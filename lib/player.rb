@@ -2,10 +2,9 @@
 class Player
   attr_accessor :name, :room
 
-  def initialize(db)
-    @db   = db
+  def initialize(room)
+    @room = room
     @name = "player"
-    @room = @db.starting_room
   end
 
 end

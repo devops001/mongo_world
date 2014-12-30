@@ -2,7 +2,7 @@
 require 'mongo'
 
 class Database
-  attr_reader :dbname
+  attr_reader :dbname, :rooms
 
   def initialize(dbname="mongo_world")
     @dbname = dbname
@@ -12,6 +12,7 @@ class Database
     @items  = @db.collection('items')
     @mobs   = @db.collection('mobs')
     clear_all
+    starting_room
   end
 
   def clear_all
@@ -21,7 +22,7 @@ class Database
   end
 
   def starting_room_name
-    'the waiting room'
+    'home'
   end
 
   def starting_room

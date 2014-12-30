@@ -8,7 +8,7 @@ class Client
 
   def initialize
     @db     = Database.new
-    @player = Player.new(@db)
+    @player = Player.new(@db.starting_room)
     @cmd    = {
       'exit' => lambda { exit 0 },
       'look' => lambda { 

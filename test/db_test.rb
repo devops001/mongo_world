@@ -1,4 +1,4 @@
-require_relative 'test_helper'
+
 require_relative '../lib/db'
 
 class DatabaseTest < Minitest::Test
@@ -8,15 +8,13 @@ class DatabaseTest < Minitest::Test
   end
 
   def teardown
-    @db.reset
+    @db.clear_all
   end
 
-  def test_add_room
-    @db.add_room("green", "a green room")
-    @db.add_room("blue",  "a blue room")
-
-    @db.rooms.each do |room|
-      puts room.inspect
-    end
+  def test_create_room
+    assert_equal(1, @db.rooms.count)
+    @db.create_room("green", "a green room")
+    @db.create_room("blue",  "a blue room")
+    assert_equal(3, @db.rooms.count)
   end
 end
