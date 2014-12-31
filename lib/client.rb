@@ -10,7 +10,8 @@ class Client
     @db     = Database.new
     @player = Player.new(@db.starting_room)
     @cmd    = {
-      'exit' => lambda { exit 0 },
+      'exit'  => lambda { exit 0 },
+			'clear' => lambda { puts `clear` },
       'look' => lambda { 
         puts
         puts "You are in #{@player.room['desc']}"
