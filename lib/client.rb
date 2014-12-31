@@ -33,7 +33,7 @@ class Client
         puts "mobs: #{@db.list_mobs_in_room(@player.room['name'])}"
       },
       'create_room' => lambda { |name,desc|
-        @db.create_room(name, desc)
+        @db.create_room(name, desc, @player.room['name'])
       },
       'create_mob' => lambda { |name,desc|
         @db.create_mob(name, desc)

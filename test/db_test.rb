@@ -23,6 +23,11 @@ class DatabaseTest < Minitest::Test
 		@db.create_room("lab", "a science lab")
 		assert_equal(1, @db.starting_room['doors'].count)
 		assert_equal(1, @db.find_room("lab")['doors'].count)
+
+    @db.create_room("kitchen", "a clean kitchen", "lab")
+		assert_equal(1, @db.find_room("kitchen")['doors'].count)
+		assert_equal(2, @db.find_room("lab")['doors'].count)
+		assert_equal(1, @db.starting_room['doors'].count)
 	end
 
 end
