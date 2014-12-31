@@ -54,18 +54,19 @@ class Database
   ## CREATE
   #########################
 
-  def create_room(name, desc, doors=[], mobs=[], items=[])
-    # make sure that there is at least one door to this room:
-    if name != starting_room_name and doors.count < 1
-      doors << starting_room_name
-    end 
-    # add doors in joined rooms back to this one:
-    doors.each do |joined_room_name|
-      joined_room = find_room(joined_room_name)
-      joined_room['doors'] << name
-      @rooms.save(joined_room) 
+  def create_room(name, desc, linked_room_name=nil)
+    doors = []
+    if name != starting_room_name
+      if linked_room_name
+        doors << linked_room_name
+      else
+        doors << starting_room_name()
+      end
+      linked_room = find_room(doors.first)
+      linked_room['doors'] << name
+      @rooms.save(linked_room) 
     end
-    @rooms.insert({'name'=>name, 'desc'=>desc, 'mobs'=>mobs, 'items'=>items, 'doors'=>doors})
+    @rooms.insert({'name'=>name, 'desc'=>desc, 'doors'=>doors, 'mobs'=>[], 'items'=>[]})
   end
 
   def create_item(name, desc)
@@ -109,11 +110,7 @@ class Database
   end
 
   def list_doors_in_room(room_name)
-    rooms = []
-    find_room(room_name)['doors'].each do |door_name|
-      rooms << find_room(door_name)
-    end
-    rooms.map{|room| room['name']}.join(', ')
+    find_room(room_name)['doors'].join(', ')
   end
 
 end
