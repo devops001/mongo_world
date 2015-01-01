@@ -37,7 +37,7 @@ class Database
   #########################
   ## FIND
   #########################
-
+  
   def find_room(name)
     @rooms.find_one({'name'=>name})
   end

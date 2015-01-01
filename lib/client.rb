@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'shellwords'
+require 'colorize'
 require_relative 'db'
 require_relative 'player'
 
@@ -13,24 +14,44 @@ class Client
       'exit'  => lambda { exit 0 },
 			'clear' => lambda { puts `clear` },
       'look' => lambda { 
+        room_name = @player.room['name']
+        desc  = @player.room['desc']
+        mobs  = @db.list_mobs_in_room(room_name)
+        items = @db.list_items_in_room(room_name)
+        doors = @db.list_doors_in_room(room_name)
+
         puts
-        puts "You are in #{@player.room['desc']}"
-        @cmd['mobs'].call
-        @cmd['items'].call
-        @cmd['doors'].call
+        puts "You are in ".colorize(:light_black) + desc.colorize(:white)
+        if mobs.length>0 or items.length>0
+          print "You see ".colorize(:light_black)
+          if mobs.length>0 
+            print mobs.colorize(:red) 
+            if items.length>0
+              print ", ".colorize(:light_black) 
+            end
+          end
+          if items.length>0  
+            print items.colorize(:yellow)
+          end
+          puts
+        end
+
+        if doors.length>0
+          puts "exits: [".colorize(:light_black) + doors.colorize(:light_blue) +"]".colorize(:light_black)
+        end
       },
       'cd' => lambda { |room_name|
         room = @db.find_room(room_name)
         @player.room = room if room
       },
       'doors' => lambda {
-        puts "doors: #{@db.list_doors_in_room(@player.room['name'])}"
+        puts @db.list_doors_in_room(@player.room['name'])
       },
       'items' => lambda {
-        puts "items: #{@db.list_items_in_room(@player.room['name'])}"
+        puts @db.list_items_in_room(@player.room['name'])
       },
       'mobs' => lambda {
-        puts "mobs: #{@db.list_mobs_in_room(@player.room['name'])}"
+        puts @db.list_mobs_in_room(@player.room['name'])
       },
       'create_room' => lambda { |name,desc|
         @db.create_room(name, desc, @player.room['name'])
@@ -56,7 +77,11 @@ class Client
   end
 
   def prompt
-    "#{@player.name}@#{@player.room['name']}> "
+    s = ""
+    s << @player.name.colorize(:light_magenta)
+    s << "@".colorize(:light_black)
+    s << @player.room['name'].colorize(:light_blue)
+    s << "> ".colorize(:light_black)
   end
 
   def run
