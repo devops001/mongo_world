@@ -43,10 +43,6 @@ class Model
     @data[key.to_sym] = value
   end
 
-  def keys
-    [:_id]
-  end
-
   def data
     @data
   end
