@@ -2,5 +2,5 @@
 
 require_relative 'lib/client'
 
-Client.new.run
+Client.new(true).run
 

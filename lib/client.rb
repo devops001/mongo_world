@@ -7,17 +7,18 @@ require_relative 'player'
 require_relative 'room'
 
 class Client
+  attr_reader :cmd, :home, :player
 
-  def setup_db
-    Model.debug = true
+  def setup_db(debug)
+    Model.debug = debug
     Room.init!
     Player.init!
     Room.destroy_all!
     Player.destroy_all!
   end
 
-  def initialize
-    setup_db
+  def initialize(debug=false)
+    setup_db(debug)
 
     @home   = Room.create!('home', 'a small white room')
     @player = Player.create!('player', @home)
