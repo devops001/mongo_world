@@ -49,11 +49,39 @@ class RoomTest < Minitest::Test
     room = Room.new
     room.set(:color, 'red')
     room.save!
-
     room2 = Room.find(room.get(:_id))
     assert(room2)
     assert_equal(room.get(:_id), room2.get(:_id))
     assert_equal(room.get(:color), room2.get(:color))
   end
 
+  def test_connect
+    blue = Room.create('blue', 'a blue room')
+    red  = Room.create('red', 'a red room')
+
+    blue.connect(red)
+    assert_equal(1, blue.doors.count)
+    assert_equal(1, red.doors.count)
+    assert_equal('red',  blue.doors[0][:room_name])
+    assert_equal('blue', red.doors[0][:room_name])
+    assert_equal(blue._id, red.doors[0][:room_id])
+    assert_equal(red._id,  blue.doors[0][:room_id])
+
+    red.connect(blue)  #<- shouldn't connect again if already exists
+    assert_equal(1, blue.doors.count)
+    assert_equal(1, red.doors.count)
+    assert_equal('red',  blue.doors[0][:room_name])
+    assert_equal('blue', red.doors[0][:room_name])
+    assert_equal(blue._id, red.doors[0][:room_id])
+    assert_equal(red._id,  blue.doors[0][:room_id])
+  end
+
+
+
+
 end
+
+
+
+
+
