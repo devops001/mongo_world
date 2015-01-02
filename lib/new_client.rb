@@ -36,37 +36,19 @@ class Client
         end
 
         if doors.length>0
-          puts "doors: [".colorize(:light_black) + doors.colorize(:light_blue) +"]".colorize(:light_black)
+          #puts "doors: [".colorize(:light_black) + doors.colorize(:light_blue) +"]".colorize(:light_black)
+          puts doors.inspect
         end
       },
       'cd' => lambda { |room_name|
-        room = @db.find_room(room_name)
+        data = Room.collection.find_one(:name => room_name)
+        room = Room.find(data[:_id])
         @player.room = room if room
       },
-      'doors' => lambda {
-        puts @db.list_doors_in_room(@player.room['name'])
-      },
-      'items' => lambda {
-        puts @db.list_items_in_room(@player.room['name'])
-      },
-      'mobs' => lambda {
-        puts @db.list_mobs_in_room(@player.room['name'])
-      },
       'create_room' => lambda { |name,desc|
-        @db.create_room(name, desc, @player.room['name'])
+        room = Room.create(name, desc)
+        room.add_door_to(@player.room)
       },
-      'create_mob' => lambda { |name,desc|
-        @db.create_mob(name, desc)
-      },
-      'create_item' => lambda { |name,desc|
-        @db.create_item(name, desc)  
-      },
-      'add_mob' => lambda { |mob_name|
-        @db.add_mob(@player.room['name'], mob_name)
-      },
-      'add_item' => lambda { |item_name|
-        @db.add_item(@player.room['name'], item_name)
-      }
     }
     @cmd['quit'] = @cmd['exit']
     @cmd['ls']   = @cmd['look']

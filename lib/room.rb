@@ -32,4 +32,15 @@ class Room < Model
     @@home
   end
 
+  def add_door_to(other_room)
+    doors = get(:doors)
+    doors << other_room._id
+    set(:doors, doors)
+    save!
+    other_doors = other_room.get(:doors)
+    other_doors << get(:_id)
+    other_room.set(:doors, other_doors)
+    other_room.save!
+  end
+
 end
