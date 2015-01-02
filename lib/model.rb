@@ -1,4 +1,6 @@
 
+require 'mongo'
+
 class Model
   @@collection = nil
 

@@ -9,20 +9,18 @@ class Client
 
   def initialize
     Room.init
-    @rooms  = [Room.new('home', 'a small white room')]
-    @player = Player.create('player', @rooms[0])
+    Player.init
+    @player = Player.create('player', Room.home)
     @cmd    = {
       'exit'  => lambda { exit 0 },
       'clear' => lambda { puts `clear` },
       'look'  => lambda { 
-        room  = @player.room
-        desc  = @player.room
-        mobs  = @player
-        items = @db.list_items_in_room(room_name)
-        doors = @db.list_doors_in_room(room_name)
-
+        @player.room.refresh!
+        mobs  = @player.room.mobs
+        items = @player.room.items
+        doors = @player.room.doors
         puts
-        puts "You are in ".colorize(:light_black) + desc.colorize(:white)
+        puts "You are in ".colorize(:light_black) + @player.room.desc.colorize(:white)
         if mobs.length>0 or items.length>0
           print "You see ".colorize(:light_black)
           if mobs.length>0 
@@ -38,7 +36,7 @@ class Client
         end
 
         if doors.length>0
-          puts "exits: [".colorize(:light_black) + doors.colorize(:light_blue) +"]".colorize(:light_black)
+          puts "doors: [".colorize(:light_black) + doors.colorize(:light_blue) +"]".colorize(:light_black)
         end
       },
       'cd' => lambda { |room_name|
@@ -81,7 +79,7 @@ class Client
     s = ""
     s << @player.name.colorize(:light_magenta)
     s << "@".colorize(:light_black)
-    s << @player.room['name'].colorize(:light_blue)
+    s << @player.room.name.colorize(:light_blue)
     s << "> ".colorize(:light_black)
   end
 
