@@ -8,7 +8,7 @@ class Door
   end
 
   def to_h
-    { :room_name => @room_name, :room_id => @room_id }
+    { 'room_name' => @room_name, 'room_id' => @room_id }
   end
 
   def to_s

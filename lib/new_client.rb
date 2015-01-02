@@ -16,38 +16,18 @@ class Client
       'clear' => lambda { puts `clear` },
       'look'  => lambda { 
         @player.room.refresh!
-        mobs  = @player.room.mobs
-        items = @player.room.items
-        doors = @player.room.doors
         puts
         puts "You are in ".colorize(:light_black) + @player.room.desc.colorize(:white)
-        if mobs.length>0 or items.length>0
-          print "You see ".colorize(:light_black)
-          if mobs.length>0 
-            print mobs.colorize(:red) 
-            if items.length>0
-              print ", ".colorize(:light_black) 
-            end
-          end
-          if items.length>0  
-            print items.colorize(:yellow)
-          end
-          puts
-        end
-
-        if doors.length>0
-          #puts "doors: [".colorize(:light_black) + doors.colorize(:light_blue) +"]".colorize(:light_black)
-          puts doors.inspect
-        end
+        puts "doors: [".colorize(:light_black) + @player.room.list_doors.colorize(:light_blue) +"]".colorize(:light_black)
       },
       'cd' => lambda { |room_name|
-        data = Room.collection.find_one(:name => room_name)
-        room = Room.find(data[:_id])
+        data = Room.collection.find_one('name' => room_name)
+        room = Room.find(data['_id'])
         @player.room = room if room
       },
       'create_room' => lambda { |name,desc|
         room = Room.create(name, desc)
-        room.add_door_to(@player.room)
+        room.connect(@player.room)
       },
     }
     @cmd['quit'] = @cmd['exit']

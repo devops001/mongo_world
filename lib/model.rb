@@ -19,13 +19,12 @@ class Model
   end
 
   def self.get_data(_id)
-    data = @@collection.find_one(:_id=>_id)
-    self.keys_to_syms(data)
+    @@collection.find_one('_id'=>_id)
   end
 
   def self.find(_id)
     instance = self.new
-    instance.send(:data=, self.get_data(_id))
+    instance.send('data=', self.get_data(_id))
     instance
   end
 
@@ -34,19 +33,19 @@ class Model
   end
 
   def refresh!
-    @data = self.class.get_data(get(:_id))
+    @data = self.class.get_data(get('_id'))
   end
 
   def save!
-    set(:_id, @@collection.save(@data))
+    set('_id', @@collection.save(@data))
   end
 
   def get(key)
-    @data[key.to_sym]
+    @data[key.to_s]
   end
 
   def set(key, value)
-    @data[key.to_sym] = value
+    @data[key.to_s] = value
   end
 
   def data
@@ -54,7 +53,7 @@ class Model
   end
 
   def method_missing(meth, *args, &block) 
-    if @data.include?(meth.to_sym)
+    if @data.include?(meth.to_s)
       get(meth)
     elsif meth.to_s =~ /(.*)=$/
       set($1, args.first)
@@ -66,10 +65,6 @@ class Model
   private
     def data=(data)
       @data = data
-    end
-
-    def self.keys_to_syms(hash)
-      hash.inject({}){|symkeys,(k,v)| symkeys[k.to_sym]=v; symkeys}
     end
 end
 
