@@ -4,7 +4,7 @@ require_relative '../lib/model'
 class ModelTest < Minitest::Test
 
   def setup
-    Model.collection = Mongo::MongoClient.new('localhost').db("test_mongo_world").collection('models')
+    Model.init
   end
 
   def teardown

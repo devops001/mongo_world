@@ -4,6 +4,11 @@ require_relative 'db'
 class Model
   @@collection = nil
 
+  def self.init(db=nil)
+    db ||= Mongo::MongoClient.new('localhost').db('mongo_world');
+    @@collection = db.collection(self.name)
+  end
+
   def self.collection=(mongo_collection)
     @@collection = mongo_collection
   end

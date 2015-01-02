@@ -5,7 +5,7 @@ require_relative '../lib/player'
 class PlayerTest < Minitest::Test
 
   def setup
-    @db     = Database.new('mongo_world_test')
+    @db     = Database.new('test')
     @player = Player.new(@db.starting_room)
   end
 
