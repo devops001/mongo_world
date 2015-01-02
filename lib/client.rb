@@ -7,7 +7,7 @@ require_relative 'player'
 require_relative 'room'
 
 class Client
-  attr_reader :cmd, :home, :player
+  attr_reader :home, :player
 
   def setup_db(debug)
     Model.debug = debug
@@ -77,6 +77,10 @@ class Client
     s << "@".colorize(:light_black)
     s << room.name.colorize(:light_blue)
     s << "> ".colorize(:light_black)
+  end
+
+  def commands
+    @cmd.keys.sort
   end
 
   def run

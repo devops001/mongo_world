@@ -17,6 +17,11 @@ class ClientTest < Minitest::Test
     assert_equal('home', @client.player.get_room!.name)
   end
 
+  def test_commands
+    assert_equal(9, @client.commands.count)
+    expect = ["cd", "clear", "create_room", "debug", "exit", "help", "look", "ls", "quit"]
+    assert_equal(expect, @client.commands)
+  end
 
 end
 
