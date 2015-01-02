@@ -7,7 +7,8 @@ class PlayerTest < Minitest::Test
   def setup
     Room.init!('testdb')
     Player.init!('testdb')
-    @player = Player.create!('player', Room.home)
+    @home   = Room.create!('home', 'a small white room')
+    @player = Player.create!('player', @home)
   end
 
   def test_name
@@ -15,12 +16,12 @@ class PlayerTest < Minitest::Test
   end
 
   def test_create!
-    tom = Player.create!('tom', Room.home)
+    tom = Player.create!('tom', @home)
     assert(tom.get('_id'))
   end
 
   def test_room_accessors
-    assert_equal(Room.home.name, @player.get_room!.name)
+    assert_equal(@home.name, @player.get_room!.name)
     kitchen = Room.create!('kitchen', 'a kitchen')
     @player.set_room!(kitchen)
     assert_equal('kitchen', @player.get_room!.name)

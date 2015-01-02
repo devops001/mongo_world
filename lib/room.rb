@@ -4,8 +4,6 @@ require_relative 'door'
 
 class Room < Model
 
-  @@home = nil
-
   def initialize
     super
     set('name', '')
@@ -21,15 +19,6 @@ class Room < Model
     room.set('desc', desc)
     room.save!
     room
-  end
-
-  def self.home
-    if @@home.nil?
-      @@home = Room.create!('home', 'a small white room')
-    else
-      @@home.refresh!
-    end
-    @@home
   end
 
   def connect!(other_room)

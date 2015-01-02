@@ -19,7 +19,8 @@ class Client
   def initialize
     setup_db
 
-    @player = Player.create!('player', Room.home)
+    @home   = Room.create!('home', 'a small white room')
+    @player = Player.create!('player', @home)
 
     @cmd = {
       'exit'  => lambda { exit 0 },
