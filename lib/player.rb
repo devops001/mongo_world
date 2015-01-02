@@ -10,22 +10,20 @@ class Player < Model
 
   def self.create(name, room)
     player      = Player.new
-    player.room = room
     player.set(:name, name)
-    player.save!
+    player.room = room
     player
   end
 
   def room=(room)
-    set(:room_id, room.get(:_id))
+    id = room.get('_id')
+    set('room_id', id)
+    save!
   end
 
   def room
-    Room.find(get(:room_id))
-  end
-
-  def name
-    get(:name)
+    id = get('room_id')
+    Room.find(id)
   end
 
 end

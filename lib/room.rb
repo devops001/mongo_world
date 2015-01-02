@@ -13,7 +13,6 @@ class Room < Model
     set('items', [])
     set('mobs',  [])
     set('doors', [])
-    save!
   end
 
   def self.create(name, desc)
