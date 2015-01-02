@@ -4,7 +4,7 @@ require_relative '../lib/db'
 class DatabaseTest < Minitest::Test
 
   def setup
-    @db = Database.new('test')
+    @db = Database.new('testdb')
   end
 
   def teardown

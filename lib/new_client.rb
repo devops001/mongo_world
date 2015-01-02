@@ -10,13 +10,13 @@ class Client
   def initialize
     Room.init
     @rooms  = [Room.new('home', 'a small white room')]
-    @player = Player.new(@rooms[0])
+    @player = Player.create('player', @rooms[0])
     @cmd    = {
       'exit'  => lambda { exit 0 },
       'clear' => lambda { puts `clear` },
-      'look' => lambda { 
+      'look'  => lambda { 
         room  = @player.room
-        desc  = @player.room['desc']
+        desc  = @player.room
         mobs  = @player
         items = @db.list_items_in_room(room_name)
         doors = @db.list_doors_in_room(room_name)

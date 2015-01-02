@@ -4,7 +4,7 @@ require_relative '../lib/model'
 class ModelTest < Minitest::Test
 
   def setup
-    Model.init
+    Model.init('testdb')
   end
 
   def teardown
@@ -56,4 +56,12 @@ class ModelTest < Minitest::Test
     assert_equal(model.get(:color), model2.get(:color))
   end
 
+  def test_method_missing
+    model = Model.new
+    model.title = 'gift cards'
+    model.save!
+
+    model2 = Model.find(model._id)
+    assert_equal('gift cards', model2.title)
+  end
 end

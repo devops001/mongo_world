@@ -4,7 +4,7 @@ require_relative '../lib/room'
 class RoomTest < Minitest::Test
 
   def setup
-    Room.init
+    Room.init('testdb')
   end
 
   def teardown

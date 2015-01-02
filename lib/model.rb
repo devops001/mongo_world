@@ -1,11 +1,10 @@
 
-require_relative 'db'
-
 class Model
   @@collection = nil
 
-  def self.init(db=nil)
-    db ||= Mongo::MongoClient.new('localhost').db('mongo_world');
+  def self.init(dbname=nil)
+    dbname ||= 'mongo_world'
+    db = Mongo::MongoClient.new('localhost').db(dbname)
     @@collection = db.collection(self.name)
   end
 
@@ -50,6 +49,16 @@ class Model
 
   def data
     @data
+  end
+
+  def method_missing(meth, *args, &block) 
+    if @data.include?(meth.to_sym)
+      get(meth)
+    elsif meth.to_s =~ /(.*)=$/
+      set($1, args.first)
+    else
+      super
+    end
   end
 
   private
