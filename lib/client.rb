@@ -25,19 +25,22 @@ class Client
       'exit'  => lambda { exit 0 },
       'clear' => lambda { puts `clear` },
       'look'  => lambda { 
-        @player.room.refresh!
+        room = @player.get_room!
         puts
-        puts "You are in ".colorize(:light_black) + @player.room.desc.colorize(:white)
-        puts "doors: [".colorize(:light_black) + @player.room.list_doors.colorize(:light_blue) +"]".colorize(:light_black)
+        puts "You are in ".colorize(:light_black) + room.desc.colorize(:white)
+        puts "doors: [".colorize(:light_black) + room.list_doors.colorize(:light_blue) +"]".colorize(:light_black)
       },
       'cd' => lambda { |room_name|
-        room_id = nil
-        @player.room.doors.each do |door|
-          room_id = door['room_id'] if door['room_name'] == room_name
+        this_room = @player.get_room!
+        next_room_id = nil
+        this_room.doors.each do |door|
+          next_room_id = door['room_id'] if door['room_name'] == room_name
         end
-        if room_id
-          room = Room.find!(room_id)
-          @player.room = room if room
+        if next_room_id
+          next_room = Room.find!(next_room_id)
+          if next_room
+            @player.set_room!(next_room) 
+          end
         else
           puts "there is no door for \"#{room_name}\""
         end
@@ -46,7 +49,7 @@ class Client
         room = Room.new
         room.set('name', name)
         room.set('desc', desc)
-        room.connect!(@player.room)
+        room.connect!(@player.get_room!)
       },
       'debug' => lambda {
         if Model.debug
@@ -66,10 +69,11 @@ class Client
   end
 
   def prompt
+    room = @player.get_room!
     s = ""
     s << @player.name.colorize(:light_magenta)
     s << "@".colorize(:light_black)
-    s << @player.room.name.colorize(:light_blue)
+    s << room.name.colorize(:light_blue)
     s << "> ".colorize(:light_black)
   end
 

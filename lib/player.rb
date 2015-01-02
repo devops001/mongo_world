@@ -11,17 +11,17 @@ class Player < Model
   def self.create!(name, room)
     player = Player.new
     player.set(:name, name)
-    player.room = room
+    player.set_room!(room)
     player
   end
 
-  def room=(room)
+  def set_room!(room)
     id = room.get('_id')
     set('room_id', id)
     save!
   end
 
-  def room
+  def get_room!
     id = get('room_id')
     Room.find!(id)
   end
