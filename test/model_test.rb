@@ -4,11 +4,11 @@ require_relative '../lib/model'
 class ModelTest < Minitest::Test
 
   def setup
-    Model.init('testdb')
+    Model.init!('testdb')
   end
 
   def teardown
-    Model.collection.remove()
+    Model.destroy_all!
   end
 
   def test_new
@@ -45,12 +45,12 @@ class ModelTest < Minitest::Test
     assert_equal('red', model.get(:color))
   end
 
-  def test_find
+  def test_find!
     model = Model.new
     model.set(:color, 'red')
     model.save!
 
-    model2 = Model.find(model.get(:_id))
+    model2 = Model.find!(model.get(:_id))
     assert(model2)
     assert_equal(model.get(:_id), model2.get(:_id))
     assert_equal(model.get(:color), model2.get(:color))
@@ -61,7 +61,7 @@ class ModelTest < Minitest::Test
     model.title = 'gift cards'
     model.save!
 
-    model2 = Model.find(model._id)
+    model2 = Model.find!(model._id)
     assert_equal('gift cards', model2.title)
   end
 end

@@ -8,8 +8,8 @@ class Player < Model
     super
   end
 
-  def self.create(name, room)
-    player      = Player.new
+  def self.create!(name, room)
+    player = Player.new
     player.set(:name, name)
     player.room = room
     player
@@ -23,7 +23,7 @@ class Player < Model
 
   def room
     id = get('room_id')
-    Room.find(id)
+    Room.find!(id)
   end
 
 end

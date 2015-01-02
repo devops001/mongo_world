@@ -1,11 +1,13 @@
 
+require_relative '../lib/room'
 require_relative '../lib/player'
 
 class PlayerTest < Minitest::Test
 
   def setup
-    Player.init('testdb')
-    @player = Player.create('player', Room.home)
+    Room.init!('testdb')
+    Player.init!('testdb')
+    @player = Player.create!('player', Room.home)
   end
 
   def test_name

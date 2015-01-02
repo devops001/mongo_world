@@ -15,7 +15,7 @@ class Room < Model
     set('doors', [])
   end
 
-  def self.create(name, desc)
+  def self.create!(name, desc)
     room = Room.new
     room.set('name', name)
     room.set('desc', desc)
@@ -25,14 +25,14 @@ class Room < Model
 
   def self.home
     if @@home.nil?
-      @@home = Room.create('home', 'a small white room')
+      @@home = Room.create!('home', 'a small white room')
     else
       @@home.refresh!
     end
     @@home
   end
 
-  def connect(other_room)
+  def connect!(other_room)
     already_connected = false
     doors.each { |door| already_connected=true if door['room_id']==other_room.get('_id') }
     if not already_connected

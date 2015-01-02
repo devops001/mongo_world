@@ -8,12 +8,20 @@ require_relative 'room'
 
 class Client
 
-  def initialize
-    Player.init
-    Room.init
-    @player = Player.create('player', Room.home)
+  def setup_db
+    Model.debug = true
+    Room.init!
+    Player.init!
+    Room.destroy_all!
+    Player.destroy_all!
+  end
 
-    @cmd    = {
+  def initialize
+    setup_db
+
+    @player = Player.create!('player', Room.home)
+
+    @cmd = {
       'exit'  => lambda { exit 0 },
       'clear' => lambda { puts `clear` },
       'look'  => lambda { 
@@ -23,14 +31,30 @@ class Client
         puts "doors: [".colorize(:light_black) + @player.room.list_doors.colorize(:light_blue) +"]".colorize(:light_black)
       },
       'cd' => lambda { |room_name|
-        data = Room.collection.find_one('name' => room_name)
-        room = Room.find(data['_id'])
-        @player.room = room if room
+        room_id = nil
+        @player.room.doors.each do |door|
+          room_id = door['room_id'] if door['room_name'] == room_name
+        end
+        if room_id
+          room = Room.find!(room_id)
+          @player.room = room if room
+        end
       },
       'create_room' => lambda { |name,desc|
-        room = Room.create(name, desc)
-        room.connect(@player.room)
+        room = Room.new
+        room.set('name', name)
+        room.set('desc', desc)
+        room.connect!(@player.room)
       },
+      'debug' => lambda {
+        if Model.debug
+          Model.debug = false
+          puts "debug is now disabled"
+        else
+          Model.debug = true
+          puts "debug is now enabled"
+        end
+      }
     }
     @cmd['quit'] = @cmd['exit']
     @cmd['ls']   = @cmd['look']

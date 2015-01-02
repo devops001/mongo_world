@@ -3,12 +3,20 @@ require 'mongo'
 
 class Model
   @collection = nil
+  @@debug     = false
 
-  def self.init(dbname=nil)
+  def Model.debug
+    @@debug
+  end
+
+  def Model.debug=(bool)
+    @@debug = bool
+  end
+
+  def self.init!(dbname=nil)
     dbname ||= 'mongo_world'
     db = Mongo::MongoClient.new('localhost').db(dbname)
     @collection = db.collection(self.name)
-    log("#{self.name}#init(#{dbname}) using collection: #{@collection.name}")
   end
 
   def self.collection=(mongo_collection)
@@ -19,14 +27,18 @@ class Model
     @collection
   end
 
-  def self.get_data(_id)
+  def self.get_data!(_id)
     @collection.find_one('_id'=>_id)
   end
 
-  def self.find(_id)
+  def self.find!(_id)
     instance = self.new
-    instance.send('data=', self.get_data(_id))
+    instance.send('data=', self.get_data!(_id))
     instance
+  end
+
+  def self.destroy_all!
+    @collection.remove() if @collection
   end
 
   def initialize
@@ -34,14 +46,14 @@ class Model
   end
 
   def refresh!
-    @data = self.class.get_data(get('_id'))
+    @data = self.class.get_data!(get('_id'))
   end
 
   def save!
     id = self.class.collection.save(@data)
     set('_id', id)
     @data.delete(:_id)
-    puts "#{self.class.name} SAVED: #{@data.inspect}"
+    puts "#{self.class.name} SAVED: #{@data.inspect}" if Model.debug
   end
 
   def get(key)
