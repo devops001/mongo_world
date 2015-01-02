@@ -38,6 +38,8 @@ class Client
         if room_id
           room = Room.find!(room_id)
           @player.room = room if room
+        else
+          puts "there is no door for \"#{room_name}\""
         end
       },
       'create_room' => lambda { |name,desc|
