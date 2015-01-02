@@ -26,11 +26,28 @@ class Client
     @cmd = {
       'exit'  => lambda { exit 0 },
       'clear' => lambda { puts `clear` },
-      'look'  => lambda { 
+      'look'  => lambda { |name=nil|
         room = @player.get_room!
-        puts
-        puts "You are in ".colorize(:light_black) + room.desc.colorize(:white)
-        puts "doors: [".colorize(:light_black) + room.list_doors.colorize(:light_blue) +"]".colorize(:light_black)
+        if name.nil?
+          puts
+          puts "You are in ".colorize(:light_black) + room.desc.colorize(:white)
+          puts "doors: [".colorize(:light_black) + room.list_doors.colorize(:light_blue) +"]".colorize(:light_black)
+        else
+          desc = nil
+          room.doors.each do |door|
+            if door['room_name'] == name
+              found_room = Room.find!(door['room_id'])
+              if found_room
+                desc = "you see a ".colorize(:light_black) + found_room.desc.colorize(:white)
+              end
+            end
+          end
+          if desc.nil?
+            puts "you don't see anything like that".colorize(:light_red)
+          else
+            puts desc
+          end
+        end
       },
       'cd' => lambda { |room_name|
         this_room = @player.get_room!
