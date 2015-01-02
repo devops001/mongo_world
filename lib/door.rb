@@ -11,9 +11,5 @@ class Door
     { 'room_name' => @room_name, 'room_id' => @room_id }
   end
 
-  def to_s
-    @room_name
-  end
-
 end
 
