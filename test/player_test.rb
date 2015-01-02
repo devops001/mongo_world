@@ -14,20 +14,18 @@ class PlayerTest < Minitest::Test
     assert_equal("player", @player.name)
   end
 
-  def test_home
-    assert_equal(Room.home.name, @player.get_room!.name)
-  end
-
   def test_create!
     tom = Player.create!('tom', Room.home)
-    assert_equal(Room.home.name, tom.get_room!.name)
+    assert(tom.get('_id'))
   end
 
-  def test_set_room!
+  def test_room_accessors
+    assert_equal(Room.home.name, @player.get_room!.name)
     kitchen = Room.create!('kitchen', 'a kitchen')
     @player.set_room!(kitchen)
     assert_equal('kitchen', @player.get_room!.name)
   end
+
 
 end
 
