@@ -8,9 +8,7 @@ class Room < Model
     super
     set('name', '')
     set('desc', '')
-    set('items', [])
-    set('mobs',  [])
-    set('doors', [])
+    set('doors',[])
   end
 
   def self.create!(name, desc)

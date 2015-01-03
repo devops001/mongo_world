@@ -83,7 +83,7 @@ class Client
         room = @player.get_room!
         room.set('desc', new_description)
         room.save!
-        puts room.name.colorize(:light_orange) + " has been updated.".colorize(:light_white)
+        puts room.name.colorize(:light_blue) + " has been updated.".colorize(:light_yellow)
       }
     }
     @cmd['quit'] = @cmd['exit']
