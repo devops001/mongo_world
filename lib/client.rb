@@ -9,16 +9,12 @@ require_relative 'room'
 class Client
   attr_reader :home, :player
 
-  def setup_db(debug)
+  def initialize(debug=false)
     Model.debug = debug
     Room.init!
     Player.init!
     Room.destroy_all!
     Player.destroy_all!
-  end
-
-  def initialize(debug=false)
-    setup_db(debug)
 
     @home   = Room.create!('home', 'a small white room')
     @player = Player.create!('player', @home)
@@ -29,7 +25,6 @@ class Client
       'look'  => lambda { |name=nil|
         room = @player.get_room!
         if name.nil?
-          puts
           puts "You are in ".colorize(:light_black) + room.desc.colorize(:white)
           puts "doors: [".colorize(:light_black) + room.list_doors.colorize(:light_blue) +"]".colorize(:light_black)
         else
@@ -49,11 +44,15 @@ class Client
           end
         end
       },
-      'cd' => lambda { |room_name|
-        this_room = @player.get_room!
-        next_room_id = nil
-        this_room.doors.each do |door|
-          next_room_id = door['room_id'] if door['room_name'] == room_name
+      'cd' => lambda { |room_name=nil|
+        if room_name.nil?
+          next_room_id = @home._id
+        else
+          this_room = @player.get_room!
+          next_room_id = nil
+          this_room.doors.each do |door|
+            next_room_id = door['room_id'] if door['room_name'] == room_name
+          end
         end
         if next_room_id
           next_room = Room.find!(next_room_id)
@@ -64,11 +63,13 @@ class Client
           puts "there is no door for \"#{room_name}\""
         end
       },
-      'create_room' => lambda { |name,desc|
-        room = Room.new
-        room.set('name', name)
-        room.set('desc', desc)
-        room.connect!(@player.get_room!)
+      'create_room' => lambda { |name, desc='a room'|
+        room = Room.create!(name, desc)
+        if room
+          room.connect!(@player.get_room!)
+        else
+          puts "couldn't create room: ".colorize(:red) + room.inspect
+        end
       },
       'debug' => lambda {
         if Model.debug
@@ -86,8 +87,9 @@ class Client
         puts room.name.colorize(:light_blue) + " has been updated.".colorize(:light_yellow)
       }
     }
-    @cmd['quit'] = @cmd['exit']
-    @cmd['ls']   = @cmd['look']
+    @cmd['quit']  = @cmd['exit']
+    @cmd['ls']    = @cmd['look']
+    @cmd['mkdir'] = @cmd['create_room']
     @cmd['help'] = lambda {
       puts "Commands: #{@cmd.keys.sort.join(', ')}"
     }

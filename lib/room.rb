@@ -11,6 +11,21 @@ class Room < Model
     set('doors',[])
   end
 
+  def save!
+    same_name = self.class.collection.find({'name' => get('name')})
+    if super
+      same_name.each do |data|
+        if data['_id'] != get('_id')
+          puts "DELETE".colorize(:light_yellow) + " #{data.inspect}" if Model.debug
+          self.class.collection.remove({'_id' => data['_id']})
+        end
+      end
+      true
+    else
+      false
+    end
+  end
+
   def self.create!(name, desc)
     room = Room.new
     room.set('name', name)
@@ -25,7 +40,7 @@ class Room < Model
     if not already_connected
       doors << Door.new(other_room.name, other_room._id).to_h
       set('doors', doors)
-      save!
+      return false if not save!
     end
     already_connected = false
     other_doors       = other_room.get('doors')
@@ -33,8 +48,9 @@ class Room < Model
     if not already_connected
       other_doors << Door.new(get('name'), get('_id')).to_h
       other_room.set('doors', other_doors)
-      other_room.save!
+      return false if not other_room.save!
     end
+    true
   end
 
   def list_doors

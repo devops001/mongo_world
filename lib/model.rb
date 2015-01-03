@@ -1,5 +1,6 @@
 
 require 'mongo'
+require 'colorize'
 
 class Model
   @collection = nil
@@ -32,9 +33,15 @@ class Model
   end
 
   def self.find!(_id)
-    instance = self.new
-    instance.send('data=', self.get_data!(_id))
-    instance
+    data = self.get_data!(_id)
+    if data
+      instance = self.new
+      instance.send('data=', data)
+      instance
+    else
+      puts "WARN".colorize(:light_magenta) +" #{self.name}#find!(#{_id}) not found" if Model.debug
+      nil
+    end
   end
 
   def self.destroy_all!
@@ -53,7 +60,8 @@ class Model
     id = self.class.collection.save(@data)
     set('_id', id)
     @data.delete(:_id)
-    puts "#{self.class.name} SAVED: #{@data.inspect}" if Model.debug
+    puts "SAVED".colorize(:light_green) + " #{self.class.name}: #{@data.inspect}" if Model.debug
+    true
   end
 
   def get(key)
