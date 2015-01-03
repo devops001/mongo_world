@@ -11,21 +11,6 @@ class Room < Model
     set('doors',[])
   end
 
-  def save!
-    same_name = self.class.collection.find({'name' => get('name')})
-    if super
-      same_name.each do |data|
-        if data['_id'] != get('_id')
-          puts "DELETE".colorize(:light_yellow) + " #{data.inspect}" if Model.debug
-          self.class.collection.remove({'_id' => data['_id']})
-        end
-      end
-      true
-    else
-      false
-    end
-  end
-
   def self.create!(name, desc)
     room = Room.new
     room.set('name', name)
@@ -51,6 +36,11 @@ class Room < Model
       return false if not other_room.save!
     end
     true
+  end
+
+  def remove_door!(door)
+    doors.delete_if { |d| d['room_id'] == door.room_id }
+    save!
   end
 
   def list_doors

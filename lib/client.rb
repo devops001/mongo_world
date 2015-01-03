@@ -64,12 +64,10 @@ class Client
         end
       },
       'create_room' => lambda { |name, desc='a room'|
-        room = Room.create!(name, desc)
-        if room
-          room.connect!(@player.get_room!)
-        else
-          puts "couldn't create room: ".colorize(:red) + room.inspect
-        end
+        room      = Room.new
+        room.name = name
+        room.desc = desc
+        room.connect!(@player.get_room!)
       },
       'debug' => lambda {
         if Model.debug
