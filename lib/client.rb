@@ -78,6 +78,12 @@ class Client
           Model.debug = true
           puts "debug is now enabled"
         end
+      },
+      'desc' => lambda { |new_description|
+        room = @player.get_room!
+        room.set('desc', new_description)
+        room.save!
+        puts room.name.colorize(:light_orange) + " has been updated.".colorize(:light_white)
       }
     }
     @cmd['quit'] = @cmd['exit']

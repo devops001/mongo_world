@@ -18,8 +18,8 @@ class ClientTest < Minitest::Test
   end
 
   def test_commands
-    assert_equal(9, @client.commands.count)
-    expect = ["cd", "clear", "create_room", "debug", "exit", "help", "look", "ls", "quit"]
+    assert_equal(10, @client.commands.count)
+    expect = ["cd", "clear", "create_room", "debug", "desc", "exit", "help", "look", "ls", "quit"]
     assert_equal(expect, @client.commands)
   end
 
