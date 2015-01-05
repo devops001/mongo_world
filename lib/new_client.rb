@@ -32,9 +32,9 @@ class Client
     @cmd = {
       'exit'  => lambda { exit 0 },
       'clear' => lambda { puts `clear` },
-      'look'  => lambda { 
+      'ls'  => lambda { 
         doors = @room.doors.map { |door| door['room_name'] }.join(', ').colorize(:light_blue)
-        puts "You are in ".colorize(:light_black) + @room.desc.colorize(:white)
+        puts @room.name.colorize(:light_blue) +": ".colorize(:light_black) + @room.desc.colorize(:white)
         puts "doors: [".colorize(:light_black) + doors +"]".colorize(:light_black)
       },
       'cd' => lambda { |room_name=nil|
@@ -52,7 +52,7 @@ class Client
           puts "there is no door for \"#{room_name}\""
         end
       },
-      'create_room' => lambda { |name, desc='a room'|
+      'mkdir' => lambda { |name, desc='a room'|
         room = Model.new(@db, 'rooms')
         room.name  = name
         room.desc  = desc
@@ -80,9 +80,7 @@ class Client
         room.save!
       }
     }
-    @cmd['quit']  = @cmd['exit']
-    @cmd['ls']    = @cmd['look']
-    @cmd['mkdir'] = @cmd['create_room']
+    @cmd['quit'] = @cmd['exit']
     @cmd['help'] = lambda {
       puts "Commands: #{@cmd.keys.sort.join(', ')}"
     }
