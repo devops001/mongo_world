@@ -3,7 +3,6 @@ require 'mongo'
 require 'colorize'
 
 class Db
-
   def initialize(dbname='mongo_world')
     @mongodb = Mongo::MongoClient.new('localhost').db(dbname)
   end
@@ -20,11 +19,9 @@ class Db
     puts "DB SAVE ".colorize(:light_green) + "#{colname} ".colorize(:light_blue) + data.inspect
     data
   end
-
 end
 
 class Model 
-
   def initialize(db, collection_name, _id=nil)
     @db      = db
     @colname = collection_name

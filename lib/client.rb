@@ -1,104 +1,100 @@
 #!/usr/bin/env ruby
 
 require 'shellwords'
-require 'colorize'
-require_relative 'model'
-require_relative 'player'
-require_relative 'room'
+require_relative 'db'
 
 class Client
-  attr_reader :home, :player
 
-  def initialize(debug=false)
-    Model.debug = debug
-    Room.init!
-    Player.init!
-    Room.destroy_all!
-    Player.destroy_all!
+  def initialize
+    setup_data
+    setup_commands
+  end
 
-    @home   = Room.create!('home', 'a small white room')
-    @player = Player.create!('player', @home)
+  def setup_data
+    @db = Db.new
 
+    @home = Model.new(@db, 'rooms')
+    @home.name  = 'home'
+    @home.desc  = 'a home'
+    @home.doors = [];
+    @home.save!
+    
+    @player = Model.new(@db, 'players')
+    @player.name    = 'player'
+    @player.desc    = 'a player' 
+    @player.room_id = @home._id
+    @player.save!
+
+    update_room!
+  end
+
+  def setup_commands
     @cmd = {
       'exit'  => lambda { exit 0 },
       'clear' => lambda { puts `clear` },
-      'look'  => lambda { |name=nil|
-        room = @player.get_room!
-        if name.nil?
-          puts "You are in ".colorize(:light_black) + room.desc.colorize(:white)
-          puts "doors: [".colorize(:light_black) + room.list_doors.colorize(:light_blue) +"]".colorize(:light_black)
-        else
-          desc = nil
-          room.doors.each do |door|
-            if door['room_name'] == name
-              found_room = Room.find!(door['room_id'])
-              if found_room
-                desc = "you see a ".colorize(:light_black) + found_room.desc.colorize(:white)
-              end
-            end
-          end
-          if desc.nil?
-            puts "you don't see anything like that".colorize(:light_red)
-          else
-            puts desc
-          end
-        end
+      'ls'  => lambda { 
+        doors = @room.doors.map { |door| door['room_name'] }.join(', ').colorize(:light_blue)
+        puts @room.name.colorize(:light_blue) +": ".colorize(:light_black) + @room.desc.colorize(:white)
+        puts "doors: [".colorize(:light_black) + doors +"]".colorize(:light_black)
       },
       'cd' => lambda { |room_name=nil|
         if room_name.nil?
           next_room_id = @home._id
         else
-          this_room = @player.get_room!
           next_room_id = nil
-          this_room.doors.each do |door|
+          @room.doors.each do |door|
             next_room_id = door['room_id'] if door['room_name'] == room_name
           end
         end
-        if next_room_id
-          next_room = Room.find!(next_room_id)
-          if next_room
-            @player.set_room!(next_room) 
-          end
+        if next_room_id and @db.find!('rooms', next_room_id)
+           @player.room_id = next_room_id
         else
           puts "there is no door for \"#{room_name}\""
         end
       },
-      'create_room' => lambda { |name, desc='a room'|
-        room      = Room.new
-        room.name = name
-        room.desc = desc
-        room.connect!(@player.get_room!)
-      },
-      'debug' => lambda {
-        if Model.debug
-          Model.debug = false
-          puts "debug is now disabled"
-        else
-          Model.debug = true
-          puts "debug is now enabled"
+      'mkdir' => lambda { |name, desc='a room'|
+        room = Model.new(@db, 'rooms')
+        room.name  = name
+        room.desc  = desc
+        room.doors = [ {'room_name'=>@room.name, 'room_id'=>@room._id} ]
+
+        exists = false
+        @room.doors.each do |existing_door|
+          if existing_door['room_name'] == room.name
+            puts "INFO: ".colorize(:light_black) + " saving over existing room ".colorize(:light_cyan) + room.name.colorize(:light_blue)
+            room._id = existing_door['room_id']
+            exists   = true
+          end
+        end
+
+        room.save!
+
+        if not exists
+          @room.doors << {'room_id'=>room._id, 'room_name'=>room.name}
+          @room.save!
         end
       },
       'desc' => lambda { |new_description|
-        room = @player.get_room!
-        room.set('desc', new_description)
+        room = Model.new(@db, 'rooms', @player.room_id)
+        room.desc = new_description
         room.save!
-        puts room.name.colorize(:light_blue) + " has been updated.".colorize(:light_yellow)
       }
     }
-    @cmd['quit']  = @cmd['exit']
-    @cmd['ls']    = @cmd['look']
-    @cmd['mkdir'] = @cmd['create_room']
+    @cmd['quit'] = @cmd['exit']
     @cmd['help'] = lambda {
       puts "Commands: #{@cmd.keys.sort.join(', ')}"
     }
   end
 
+  def update_room!
+    @room = Model.new(@db, 'rooms', @player.room_id)
+  end
+
   def prompt
-    room = @player.get_room!
     s = ""
     s << @player.name.colorize(:light_magenta)
     s << "@".colorize(:light_black)
-    s << room.name.colorize(:light_blue)
+    s << @room.name.colorize(:light_blue)
     s << "> ".colorize(:light_black)
   end
 
@@ -113,6 +109,7 @@ class Client
       cmd, *args = Shellwords.shellsplit(line)
       next if cmd.nil?
       if @cmd[cmd]
+        update_room!
         @cmd[cmd].call(*args)
       else
         puts "unknown command: #{line}"
