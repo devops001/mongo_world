@@ -32,7 +32,12 @@ class Client
     @cmd = {
       'exit'  => lambda { exit 0 },
       'clear' => lambda { puts `clear` },
-      'ls'  => lambda { 
+      'room'  => lambda { puts @room },
+      'debug' => lambda { 
+        print "debug is ".colorize(:light_black)
+        puts @db.toggle_debug ? "on".colorize(:light_green) : "off".colorize(:light_red)
+      },
+      'ls'    => lambda { 
         doors = @room.doors.map { |door| door['room_name'] }.join(', ').colorize(:light_blue)
         puts @room.name.colorize(:light_blue) +": ".colorize(:light_black) + @room.desc.colorize(:white)
         puts "doors: [".colorize(:light_black) + doors +"]".colorize(:light_black)
@@ -79,15 +84,18 @@ class Client
         end
       },
       'desc' => lambda { |new_description|
-        room = Model.new(@db, 'rooms', @player.room_id)
-        room.desc = new_description
-        room.save!
+        @room.desc = new_description
+        @room.save!
       }
     }
     @cmd['quit'] = @cmd['exit']
     @cmd['help'] = lambda {
       puts "Commands: #{@cmd.keys.sort.join(', ')}"
     }
+  end
+
+  def commands
+    @cmd
   end
 
   def update_room!
@@ -102,10 +110,6 @@ class Client
     s << "> ".colorize(:light_black)
   end
 
-  def commands
-    @cmd.keys.sort
-  end
-
   def run
     loop do
       $stdout.print prompt
@@ -113,8 +117,8 @@ class Client
       cmd, *args = Shellwords.shellsplit(line)
       next if cmd.nil?
       if @cmd[cmd]
-        update_room!
         @cmd[cmd].call(*args)
+        update_room!
       else
         puts "unknown command: #{line}"
       end

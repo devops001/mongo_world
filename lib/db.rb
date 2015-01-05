@@ -5,19 +5,28 @@ require 'colorize'
 class Db
   def initialize(dbname='mongo_world')
     @mongodb = Mongo::MongoClient.new('localhost').db(dbname)
+    @debug   = false
   end
 
   def find!(colname, _id)
     data = @mongodb.collection(colname).find_one({'_id' => _id})
-    puts "DB FIND ".colorize(:light_green) + "#{colname} ".colorize(:light_blue) + data.inspect
+    log "DB FIND ".colorize(:light_green) + "#{colname} ".colorize(:light_blue) + data.inspect
     data
   end
 
   def save!(colname, data)
     data['_id'] = @mongodb.collection(colname).save(data)
     data.delete(:_id)
-    puts "DB SAVE ".colorize(:light_green) + "#{colname} ".colorize(:light_blue) + data.inspect
+    log "DB SAVE ".colorize(:light_green) + "#{colname} ".colorize(:light_blue) + data.inspect
     data
+  end
+
+  def log(msg)
+    puts msg if @debug
+  end
+
+  def toggle_debug
+    @debug = !@debug
   end
 end
 
@@ -52,6 +61,6 @@ class Model
   end
 
   def to_s
-    {'collection'=>@colname, 'data'=>@data}.inspect
+    @data.inspect
   end
 end
