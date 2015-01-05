@@ -41,8 +41,8 @@ class Client
     if _id.nil?
       puts "couldn't find save: ".colorize(:light_red) + name
     else
-      puts "DEBUG: about to rm_save: #{name}: #{_id}"
       @db.destroy!('saves', _id)
+      puts "Deleted save: ".colorize(:light_red) + name
     end
   end
 
@@ -62,8 +62,7 @@ class Client
       end
       @home   = Model.new(@db, 'rooms',   saved.home_id)
       @player = Model.new(@db, 'players', saved.player_id)
-      update_room!
-      puts "DEBUG: home_id: #{saved.home_id}, player.room_id: #{@player.room_id}"
+      @room   = Model.new(@db, 'rooms', @player.room_id)
       puts "loaded from: ".colorize(:light_yellow) + name
     end
   end
