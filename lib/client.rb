@@ -63,7 +63,8 @@ class Client
       @home   = Model.new(@db, 'rooms',   saved.home_id)
       @player = Model.new(@db, 'players', saved.player_id)
       @room   = Model.new(@db, 'rooms', @player.room_id)
-      puts "loaded from: ".colorize(:light_yellow) + name
+      puts "Loaded save: ".colorize(:light_yellow) + name
+      @cmd['ls'].call
     end
   end
 
@@ -120,6 +121,7 @@ class Client
         if next_room_id
           @room = Model.new(@db, 'rooms', next_room_id)
           @player.room_id = next_room_id
+          @player.save!
         else
           puts "there is no door for \"#{room_name}\""
         end
