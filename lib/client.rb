@@ -10,8 +10,40 @@ class Client
     setup_commands
   end
 
+  def save (saved_name)
+    found = []
+    @db.all!('saves').each do |data|
+      found << data if data['name'] == saved_name
+    end
+
+    _id = nil
+    if found.count > 1
+      puts "ERROR: found more than one save with that name!".colorize(:red)
+      return ""
+    elsif found.count == 1
+      _id = found[0]['_id']
+    end
+
+    @saved = Model.new(@db, 'saves', _id)
+    @saved.rooms     = []
+    @db.all!('rooms').each { |room| @saved.rooms << room }
+    @saved.player    = @db.find!('players', @player._id)
+    @saved.home_id   = @home._id
+    @saved.name      = saved_name
+    @saved.saved_at  = Time.now
+    @saved.save!
+    puts "Saved as: ".colorize(:light_yellow) + saved_name
+  end
+
+  def list_saves
+    puts @db.all!('saves').map{|d| d['name']}.join(', ')
+  end
+
   def setup_data
     @db = Db.new
+
+    @db.destroy!('rooms')
+    @db.destroy!('players')
 
     @home = Model.new(@db, 'rooms')
     @home.name  = 'home'
@@ -33,6 +65,8 @@ class Client
       'exit'  => lambda { exit 0 },
       'clear' => lambda { puts `clear` },
       'room'  => lambda { puts @room },
+      'save'  => lambda { |name='default'| save(name) },
+      'list_saves'  => lambda { list_saves },
       'debug' => lambda { 
         print "debug is ".colorize(:light_black)
         puts @db.toggle_debug ? "on".colorize(:light_green) : "off".colorize(:light_red)
@@ -77,7 +111,6 @@ class Client
         end
 
         room.save!
-
         if not exists
           @room.doors << {'room_id'=>room._id, 'room_name'=>room.name}
           @room.save!
@@ -111,17 +144,22 @@ class Client
   end
 
   def run
-    loop do
-      $stdout.print prompt
-      line = $stdin.gets.strip
-      cmd, *args = Shellwords.shellsplit(line)
-      next if cmd.nil?
-      if @cmd[cmd]
-        @cmd[cmd].call(*args)
+    begin
+      loop do
         update_room!
-      else
-        puts "unknown command: #{line}"
+        $stdout.print prompt
+        line = $stdin.gets.strip
+        cmd, *args = Shellwords.shellsplit(line)
+        next if cmd.nil?
+        if @cmd[cmd]
+          @cmd[cmd].call(*args)
+        else
+          puts "unknown command: #{line}"
+        end
       end
+    ensure
+      @db.destroy!('players')
+      @db.destroy!('rooms')
     end
   end
 

@@ -8,6 +8,10 @@ class DbTest < Minitest::Test
     @db = Db.new('testdb')
   end
 
+  def teardown
+    @db.destroy_all!
+  end
+
   def test_basic_usage
     player1       = Model.new(@db, 'players')
     player1.name  = 'tom'
