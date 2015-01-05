@@ -41,7 +41,13 @@ class Db
     @debug = !@debug
   end
 
-  def destroy!(colname)
+  def destroy!(colname, _id)
+    puts "DEBUG: db.destroy!(#{colname}, #{_id})"
+    @mongodb.collection(colname).remove({'_id'=>_id})
+    log "DB DELETE ".colorize(:light_red) + "#{colname }".colorize(:light_blue) + _id.to_s
+  end
+
+  def destroy_collection!(colname)
     @mongodb.collection(colname).remove()
     log "DB DELETE ".colorize(:light_red) + "#{colname} ".colorize(:light_blue)
   end

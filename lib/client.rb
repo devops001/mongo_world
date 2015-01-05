@@ -11,23 +11,12 @@ class Client
   end
 
   def save (saved_name)
-    found = []
-    @db.all!('saves').each do |data|
-      found << data if data['name'] == saved_name
-    end
-
-    _id = nil
-    if found.count > 1
-      puts "ERROR: found more than one save with that name!".colorize(:red)
-      return ""
-    elsif found.count == 1
-      _id = found[0]['_id']
-    end
-
-    @saved = Model.new(@db, 'saves', _id)
-    @saved.rooms     = []
+    @saved = Model.new(@db, 'saves', find_save_id(saved_name))
+    @saved.rooms   = []
+    @saved.players = []
     @db.all!('rooms').each { |room| @saved.rooms << room }
-    @saved.player    = @db.find!('players', @player._id)
+    @db.all!('players').each { |player| @saved.players << player }
+    @saved.player_id = @player._id
     @saved.home_id   = @home._id
     @saved.name      = saved_name
     @saved.saved_at  = Time.now
@@ -35,15 +24,54 @@ class Client
     puts "Saved as: ".colorize(:light_yellow) + saved_name
   end
 
-  def list_saves
+  def ls_saves
     puts @db.all!('saves').map{|d| d['name']}.join(', ')
+  end
+
+  def find_save_id(name)
+    found = []
+    @db.all!('saves').each do |data|
+      found << data if data['name'] == name
+    end
+    return found.count==1 ? found[0]['_id'] : nil
+  end
+
+  def rm_save(name)
+    _id = find_save_id(name)
+    if _id.nil?
+      puts "couldn't find save: ".colorize(:light_red) + name
+    else
+      puts "DEBUG: about to rm_save: #{name}: #{_id}"
+      @db.destroy!('saves', _id)
+    end
+  end
+
+  def load_save(name)
+    _id = find_save_id(name)
+    if _id.nil?
+      puts "couldn't load save: ".colorize(:light_red) + name
+    else
+      saved = Model.new(@db, 'saves', _id)
+      @db.destroy_collection!('rooms')
+      @db.destroy_collection!('players')
+      saved.rooms.each do |room_data|
+        @db.save!('rooms', room_data)
+      end
+      saved.players.each do |player_data|
+        @db.save!('players', player_data)
+      end
+      @home   = Model.new(@db, 'rooms',   saved.home_id)
+      @player = Model.new(@db, 'players', saved.player_id)
+      update_room!
+      puts "DEBUG: home_id: #{saved.home_id}, player.room_id: #{@player.room_id}"
+      puts "loaded from: ".colorize(:light_yellow) + name
+    end
   end
 
   def setup_data
     @db = Db.new
-
-    @db.destroy!('rooms')
-    @db.destroy!('players')
+    @db.destroy_collection!('rooms')
+    @db.destroy_collection!('players')
 
     @home = Model.new(@db, 'rooms')
     @home.name  = 'home'
@@ -66,7 +94,9 @@ class Client
       'clear' => lambda { puts `clear` },
       'room'  => lambda { puts @room },
       'save'  => lambda { |name='default'| save(name) },
-      'list_saves'  => lambda { list_saves },
+      'ls_saves'  => lambda { ls_saves },
+      'load_save'   => lambda { |name='default'| load_save(name) },
+      'rm_save'     => lambda { |name| rm_save(name) },
       'debug' => lambda { 
         print "debug is ".colorize(:light_black)
         puts @db.toggle_debug ? "on".colorize(:light_green) : "off".colorize(:light_red)
@@ -158,8 +188,8 @@ class Client
         end
       end
     ensure
-      @db.destroy!('players')
-      @db.destroy!('rooms')
+      @db.destroy_collection!('players')
+      @db.destroy_collection!('rooms')
     end
   end
 
