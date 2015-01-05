@@ -43,11 +43,15 @@ class Client
         else
           next_room_id = nil
           @room.doors.each do |door|
-            next_room_id = door['room_id'] if door['room_name'] == room_name
+            if door['room_name'] == room_name
+              next_room_id = door['room_id'] 
+              break
+            end
           end
         end
-        if next_room_id and @db.find!('rooms', next_room_id)
-           @player.room_id = next_room_id
+        if next_room_id
+          @room = Model.new(@db, 'rooms', next_room_id)
+          @player.room_id = next_room_id
         else
           puts "there is no door for \"#{room_name}\""
         end
