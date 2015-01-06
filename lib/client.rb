@@ -29,9 +29,10 @@ class Client
     @home.save!
 
     @user = Model.new(@db, 'users')
-    @user.name    = 'user'
-    @user.desc    = 'a user'
-    @user.room_id = @home._id
+    @user.name       = 'user'
+    @user.desc       = 'a user'
+    @user.room_id    = @home._id
+    @user.remembered = nil
     @user.save!
 
     update_room!
@@ -157,6 +158,18 @@ class Client
         else
           puts "Couldn't find item to delete: ".colorize(:light_red) + item_name
         end
+      },
+      'remember' => lambda {
+        @user.remembered = {'room_name' => @room.name, 'room_id' => @room._id}
+        @user.save!
+        puts "Remembered room: ".light_green + @room.name.light_blue
+      },
+      'remembered' => lambda {
+        if @user.remembered.nil?
+          puts "You don't remember anything".light_cyan
+        else
+          puts "You remember a room: ".light_cyan + @user.remembered['room_name'].light_blue
+        end
       }
     }
 
@@ -263,6 +276,7 @@ class Client
           rescue Exception => e
             puts "command failed: ".colorize(:light_red) + line
             puts "  #{e.to_s}"
+            e.backtrace.each { |bt| puts "  #{bt}".light_black }
           end
         else
           puts "unknown command: ".colorize(:light_red) + line
