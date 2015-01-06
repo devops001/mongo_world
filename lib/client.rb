@@ -111,7 +111,7 @@ class Client
       'cat' => lambda { |item_name|
         @room.items.each do |item_data|
           if item_data['name'] == item_name
-           puts item_data['desc'].colorize(:light_cyan)
+           puts item_data['desc']
           end
         end
       },
@@ -129,7 +129,7 @@ class Client
           line = $stdin.gets.chomp
           if line =~ /^\:w/
             editing = false
-            desc    = lines.join("\n")
+            desc    = colorize_markdown(lines.join("\n"))
             @room.items.each do |item_data|
               if item_data['name'] == item_name
                 item_data['desc'] = desc
@@ -271,6 +271,14 @@ class Client
     ensure
       @db.destroy_collection!('users')
       @db.destroy_collection!('rooms')
+    end
+  end
+
+  def colorize_markdown(text)
+    text.gsub(/\[(.*?)\](.*?)\[\/.*?\]/) do
+      color  = Regexp.last_match[1]
+      string = Regexp.last_match[2]
+      string.colorize(color.to_sym)
     end
   end
 
