@@ -114,7 +114,34 @@ class Client
            puts item_data['desc'].colorize(:light_cyan)
           end
         end
-      } 
+      },
+      'vi' => lambda { |item_name|
+        wq = ":wq".colorize(:light_red)
+        puts "enter '".colorize(:light_black) + wq +"' on its own line to quit:".colorize(:light_black)
+        exists  = false
+        lines   = []
+        editing = true
+        while editing
+          print "> ".colorize(:light_black)
+          line = $stdin.gets.chomp
+          if line =~ /^\:wq$/
+            editing = false
+            desc    = lines.join("\n")
+            @room.items.each do |item_data|
+              if item_data['name'] == item_name
+                item_data['desc'] = desc
+                @room.save!
+                puts "Changed item: ".colorize(:light_green) + item_name
+                exists = true
+                break
+              end
+            end
+            @cmd['touch'].call(item_name, desc) if not exists
+          else
+            lines << line
+          end
+        end
+      }
     }
     @cmd['quit'] = @cmd['exit']
     @cmd['help'] = lambda {
