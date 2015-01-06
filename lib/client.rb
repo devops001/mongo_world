@@ -276,10 +276,23 @@ class Client
 
   def colorize_markdown(text)
     text.gsub(/\[(.*?)\](.*?)\[\/.*?\]/) do
-      color  = Regexp.last_match[1]
-      string = Regexp.last_match[2]
-      string.colorize(color.to_sym)
+      methods = Regexp.last_match[1]
+      string  = Regexp.last_match[2]
+      methods.split('.').each do |method| 
+        if method.length > 0
+          begin
+            string = string.send(method).to_s
+          rescue Exception => e
+            puts "markdown method failed: ".light_red + method
+          end
+        end
+      end
+      string
     end
   end
 
 end
+
+
+
+
