@@ -19,11 +19,13 @@ class Client
     @db = Db.new
     @db.destroy_collection!('rooms')
     @db.destroy_collection!('users')
+    @db.destroy_collection!('items')
 
     @home = Model.new(@db, 'rooms')
     @home.name  = 'home'
     @home.desc  = 'a home'
     @home.doors = [];
+    @home.items = [];
     @home.save!
 
     @user = Model.new(@db, 'users')
@@ -50,8 +52,10 @@ class Client
       },
       'ls'    => lambda {
         doors = @room.doors.map { |door| door['room_name'] }.join(', ').colorize(:light_blue)
+        items = @room.items.map { |item| item['name'] }.join(', ').colorize(:light_yellow)
         puts @room.name.colorize(:light_blue) +": ".colorize(:light_black) + @room.desc.colorize(:white)
         puts "doors: [".colorize(:light_black) + doors +"]".colorize(:light_black)
+        puts "items: [".colorize(:light_black) + items +"]".colorize(:light_black)
       },
       'cd' => lambda { |room_name=nil|
         if room_name.nil?
@@ -77,6 +81,7 @@ class Client
         room = Model.new(@db, 'rooms')
         room.name  = name
         room.desc  = desc
+        room.items = []
         room.doors = [ {'room_name'=>@room.name, 'room_id'=>@room._id} ]
 
         exists = false
@@ -97,6 +102,11 @@ class Client
       'desc' => lambda { |new_description|
         @room.desc = new_description
         @room.save!
+      },
+      'touch' => lambda { |item_name, item_desc='an item'|
+        @room.items << {'name'=>item_name, 'desc'=>item_desc}
+        @room.save!
+        puts "Created item: ".colorize(:light_green) +  item_name
       }
     }
     @cmd['quit'] = @cmd['exit']
