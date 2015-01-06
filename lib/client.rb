@@ -116,15 +116,18 @@ class Client
         end
       },
       'vi' => lambda { |item_name|
-        wq = ":wq".colorize(:light_red)
-        puts "enter '".colorize(:light_black) + wq +"' on its own line to quit:".colorize(:light_black)
+        w = ":w".colorize(:light_green)
+        q = ":q".colorize(:light_red)
+        msg  = "Type '".colorize(:light_black) + w +"' to ".colorize(:light_black) + "write".colorize(:light_green)
+        msg << " and '".colorize(:light_black) + q +"' to ".colorize(:light_black) + "quit".colorize(:light_red)
+        puts msg
         exists  = false
         lines   = []
         editing = true
         while editing
           print "> ".colorize(:light_black)
           line = $stdin.gets.chomp
-          if line =~ /^\:wq$/
+          if line =~ /^\:w/
             editing = false
             desc    = lines.join("\n")
             @room.items.each do |item_data|
@@ -137,6 +140,9 @@ class Client
               end
             end
             @cmd['touch'].call(item_name, desc) if not exists
+          elsif line =~ /^\:q/
+            editing = false
+            puts "canceled without saving".colorize(:light_red)
           else
             lines << line
           end
