@@ -13,14 +13,14 @@ class DbTest < Minitest::Test
   end
 
   def test_basic_usage
-    player1       = Model.new(@db, 'players')
-    player1.name  = 'tom'
-    player1.level = 4
-    player1.save!
+    user1       = Model.new(@db, 'users')
+    user1.name  = 'tom'
+    user1.level = 4
+    user1.save!
 
-    player2 = Model.new(@db, 'players', player1._id)
-    assert_equal(player1.name, player2.name)
-    assert_equal(player1.level, player2.level)
+    user2 = Model.new(@db, 'users', user1._id)
+    assert_equal(user1.name, user2.name)
+    assert_equal(user1.level, user2.level)
   end
 
 end

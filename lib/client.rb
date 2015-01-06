@@ -12,14 +12,14 @@ class Client
 
   def save (saved_name)
     @saved = Model.new(@db, 'saves', find_save_id(saved_name))
-    @saved.rooms   = []
-    @saved.players = []
+    @saved.rooms = []
+    @saved.users = []
     @db.all!('rooms').each { |room| @saved.rooms << room }
-    @db.all!('players').each { |player| @saved.players << player }
-    @saved.player_id = @player._id
-    @saved.home_id   = @home._id
-    @saved.name      = saved_name
-    @saved.saved_at  = Time.now
+    @db.all!('users').each { |user| @saved.users << user }
+    @saved.user_id  = @user._id
+    @saved.home_id  = @home._id
+    @saved.name     = saved_name
+    @saved.saved_at = Time.now
     @saved.save!
     puts "Saved as: ".colorize(:light_yellow) + saved_name
   end
@@ -53,16 +53,16 @@ class Client
     else
       saved = Model.new(@db, 'saves', _id)
       @db.destroy_collection!('rooms')
-      @db.destroy_collection!('players')
+      @db.destroy_collection!('users')
       saved.rooms.each do |room_data|
         @db.save!('rooms', room_data)
       end
-      saved.players.each do |player_data|
-        @db.save!('players', player_data)
+      saved.users.each do |user_data|
+        @db.save!('users', user_data)
       end
-      @home   = Model.new(@db, 'rooms',   saved.home_id)
-      @player = Model.new(@db, 'players', saved.player_id)
-      @room   = Model.new(@db, 'rooms', @player.room_id)
+      @home = Model.new(@db, 'rooms', saved.home_id)
+      @user = Model.new(@db, 'users', saved.user_id)
+      @room = Model.new(@db, 'rooms', @user.room_id)
       puts "Loaded save: ".colorize(:light_yellow) + name
       @cmd['ls'].call
     end
@@ -71,7 +71,7 @@ class Client
   def setup_data
     @db = Db.new
     @db.destroy_collection!('rooms')
-    @db.destroy_collection!('players')
+    @db.destroy_collection!('users')
 
     @home = Model.new(@db, 'rooms')
     @home.name  = 'home'
@@ -79,11 +79,11 @@ class Client
     @home.doors = [];
     @home.save!
     
-    @player = Model.new(@db, 'players')
-    @player.name    = 'player'
-    @player.desc    = 'a player' 
-    @player.room_id = @home._id
-    @player.save!
+    @user = Model.new(@db, 'users')
+    @user.name    = 'user'
+    @user.desc    = 'a user' 
+    @user.room_id = @home._id
+    @user.save!
 
     update_room!
   end
@@ -120,8 +120,8 @@ class Client
         end
         if next_room_id
           @room = Model.new(@db, 'rooms', next_room_id)
-          @player.room_id = next_room_id
-          @player.save!
+          @user.room_id = next_room_id
+          @user.save!
         else
           puts "there is no door for \"#{room_name}\""
         end
@@ -163,12 +163,12 @@ class Client
   end
 
   def update_room!
-    @room = Model.new(@db, 'rooms', @player.room_id)
+    @room = Model.new(@db, 'rooms', @user.room_id)
   end
 
   def prompt
     s = ""
-    s << @player.name.colorize(:light_magenta)
+    s << @user.name.colorize(:light_magenta)
     s << "@".colorize(:light_black)
     s << @room.name.colorize(:light_blue)
     s << "> ".colorize(:light_black)
@@ -189,7 +189,7 @@ class Client
         end
       end
     ensure
-      @db.destroy_collection!('players')
+      @db.destroy_collection!('users')
       @db.destroy_collection!('rooms')
     end
   end
