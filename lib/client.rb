@@ -107,7 +107,14 @@ class Client
         @room.items << {'name'=>item_name, 'desc'=>item_desc}
         @room.save!
         puts "Created item: ".colorize(:light_green) +  item_name
-      }
+      },
+      'cat' => lambda { |item_name|
+        @room.items.each do |item_data|
+          if item_data['name'] == item_name
+           puts item_data['desc'].colorize(:light_cyan)
+          end
+        end
+      } 
     }
     @cmd['quit'] = @cmd['exit']
     @cmd['help'] = lambda {
