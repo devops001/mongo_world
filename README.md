@@ -14,4 +14,4 @@ To install and run:
   bundle
   ./main.rb
 ```
-
+![mongo_world_screenshot](https://cloud.githubusercontent.com/assets/8508035/5637161/74884ada-95ad-11e4-9fdf-cc8fadd40231.png)
