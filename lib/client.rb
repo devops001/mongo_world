@@ -147,8 +147,19 @@ class Client
             lines << line
           end
         end
+      },
+      'rm_item' => lambda { |item_name|
+        count = @room.items.count
+        @room.items.delete_if { |i| i['name'] == item_name }
+        if @room.items.count < count
+          @room.save!
+          puts "Deleted item: ".colorize(:light_yellow) + item_name
+        else
+          puts "Couldn't find item to delete: ".colorize(:light_red) + item_name
+        end
       }
     }
+
     @cmd['quit'] = @cmd['exit']
     @cmd['help'] = lambda {
       puts "Commands: #{@cmd.keys.sort.join(', ')}"
