@@ -54,8 +54,8 @@ class Client
         doors = @room.doors.map { |door| door['room_name'] }.join(', ').colorize(:light_blue)
         items = @room.items.map { |item| item['name'] }.join(', ').colorize(:light_yellow)
         puts @room.name.colorize(:light_blue) +": ".colorize(:light_black) + @room.desc.colorize(:white)
-        puts "doors: [".colorize(:light_black) + doors +"]".colorize(:light_black)
-        puts "items: [".colorize(:light_black) + items +"]".colorize(:light_black)
+        puts "doors: [".colorize(:light_black) + doors +"]".colorize(:light_black) if doors.length>0
+        puts "items: [".colorize(:light_black) + items +"]".colorize(:light_black) if items.length>0
       },
       'cd' => lambda { |room_name=nil|
         if room_name.nil?
