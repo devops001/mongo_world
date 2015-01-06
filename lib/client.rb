@@ -162,7 +162,7 @@ class Client
       'remember' => lambda {
         @user.remembered = {'room_name' => @room.name, 'room_id' => @room._id}
         @user.save!
-        puts "Remembered room: ".light_green + @room.name.light_blue
+        puts "You look around and will remember this room: ".light_green + @room.name.light_blue
       },
       'remembered' => lambda {
         if @user.remembered.nil?
