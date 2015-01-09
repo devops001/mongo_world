@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'shellwords'
-require_relative 'db'
+require_relative 'model'
 
 class Client
 

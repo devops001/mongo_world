@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require_relative '../lib/db'
+require_relative '../lib/model'
 
 class DbTest < Minitest::Test
 
