@@ -2,6 +2,7 @@
 
 require 'shellwords'
 require_relative 'model'
+require_relative 'mob'
 
 class Client
 
@@ -10,6 +11,7 @@ class Client
   ##########################################
 
   def initialize
+    @mobs = []
     initialize_data
     initialize_commands
     @is_running = false
@@ -26,6 +28,7 @@ class Client
     @home.desc  = 'a home'
     @home.doors = [];
     @home.items = [];
+    @home.mobs  = []
     @home.save!
 
     @user = Model.new(@db, 'users')
@@ -54,9 +57,11 @@ class Client
       'ls'    => lambda {
         doors = @room.doors.map { |door| door['room_name'] }.join(', ').colorize(:light_blue)
         items = @room.items.map { |item| item['name'] }.join(', ').colorize(:light_yellow)
+        mobs  = @room.mobs.map  { |mob|  mob['mob_name'] }.join(', ').colorize(:light_red)
         puts @room.name.colorize(:light_blue) +": ".colorize(:light_black) + @room.desc.colorize(:white)
         puts "doors: [".colorize(:light_black) + doors +"]".colorize(:light_black) if doors.length>0
         puts "items: [".colorize(:light_black) + items +"]".colorize(:light_black) if items.length>0
+        puts "mobs: [".colorize(:light_black)  + mobs  +"]".colorize(:light_black) if mobs.length>0
       },
       'cd' => lambda { |room_name=nil|
         if room_name.nil?
@@ -83,6 +88,7 @@ class Client
         room.name  = name
         room.desc  = desc
         room.items = []
+        room.mobs  = []
         room.doors = [ {'room_name'=>@room.name, 'room_id'=>@room._id} ]
 
         exists = false
@@ -170,6 +176,14 @@ class Client
         else
           puts "You remember a room: ".light_cyan + @user.remembered['room_name'].light_blue
         end
+      },
+      'make' => lambda { |name,desc='a mob'|
+        #mob = Model.new(@db, 'mobs')
+        mob = Mob.new(@db, name, desc)
+        mob.save!
+        @room.mobs << {'mob_name'=>mob.name, 'mob_id'=>mob._id}
+        @room.save!
+        puts "Created mob: ".light_green + name
       }
     }
 
@@ -268,7 +282,14 @@ class Client
         update_room!
         $stdout.print prompt
         line = $stdin.gets.strip
-        cmd, *args = Shellwords.shellsplit(line)
+        begin
+          cmd, *args = Shellwords.shellsplit(line)
+        rescue Exception => e
+          puts "command failed: ".colorize(:light_red) + line
+          puts "  #{e.to_s}"
+          e.backtrace.each { |bt| puts "  #{bt}".light_black }
+          next
+        end
         next if cmd.nil?
         if @cmd[cmd]
           begin
@@ -277,6 +298,7 @@ class Client
             puts "command failed: ".colorize(:light_red) + line
             puts "  #{e.to_s}"
             e.backtrace.each { |bt| puts "  #{bt}".light_black }
+            next
           end
         else
           puts "unknown command: ".colorize(:light_red) + line
