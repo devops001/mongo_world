@@ -4,8 +4,8 @@ mongo_world
 A colorful command line world backed by mongodb.
 
 This software requires:
-* ruby
-* mongo
+* ruby (and the 'bundle' gem)
+* mongodb
 
 To install and run:
 ```
