@@ -184,6 +184,18 @@ class Client
         @room.mobs << {'mob_name'=>mob.name, 'mob_id'=>mob._id}
         @room.save!
         echo "Created mob: ".light_green + name
+      },
+      'link' => lambda {
+        if @user.remembered.nil?
+          puts "You don't remember any rooms to link to".light_red
+        else
+          room = Model.new(@db, 'rooms', @user.remembered['room_id'])
+          room.doors << {'room_name'=>@room.name, 'room_id'=>@room._id}
+          room.save!
+          @room.doors << {'room_name'=>room.name, 'room_id'=>room._id}
+          @room.save!
+          puts "Created a door to: ".light_green + room.name
+        end
       }
     }
 
