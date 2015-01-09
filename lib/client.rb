@@ -11,7 +11,6 @@ class Client
   ##########################################
 
   def initialize
-    @mobs = []
     initialize_data
     initialize_commands
     @is_running = false
