@@ -3,7 +3,7 @@ require 'mongo'
 require 'colorize'
 
 class Db
-  def initialize(dbname='mongo_world')
+  def initialize(dbname)
     @dbname  = dbname
     @mongo   = Mongo::MongoClient.new('localhost')
     @mongodb = @mongo.db(@dbname)
@@ -21,7 +21,7 @@ class Db
   end
 
   def all!(colname)
-    data = @mongodb.collection(colname).find()
+    data = @mongodb.collection(colname).find().to_a
     log "DB FIND ".colorize(:light_green) + "#{colname} ".colorize(:light_blue) + data.inspect
     data
   end
