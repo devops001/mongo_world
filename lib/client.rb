@@ -197,7 +197,7 @@ class Client
   ## saving
   ##########################################
 
-  def save(saved_name)
+  def save(saved_name='default')
     saved          = Model.new(@db, 'saves', find_save_id(saved_name))
     saved.rooms    = @db.all!('rooms')
     saved.users    = @db.all!('users')
@@ -208,10 +208,13 @@ class Client
     saved.saved_at = Time.now
     saved.save!
     echo "Saved as: ".light_yellow + saved_name
+    saved
   end
 
   def ls_saves
-    echo @db.all!('saves').map{|d| d['name']}.join(', ')
+    output = @db.all!('saves').map{|d| d['name']}.join(', ')
+    echo output
+    output
   end
 
   def find_save_id(name)
