@@ -51,17 +51,17 @@ class Client
       'load_save'   => lambda { |name='default'| load_save(name) },
       'rm_save'     => lambda { |name| rm_save(name) },
       'debug' => lambda {
-        print "debug is ".colorize(:light_black)
-        puts @db.toggle_debug ? "on".colorize(:light_green) : "off".colorize(:light_red)
+        print "debug is ".light_black
+        puts @db.toggle_debug ? "on".light_green : "off".light_red
       },
       'ls'    => lambda {
-        doors = @room.doors.map { |door| door['room_name'] }.join(', ').colorize(:light_blue)
-        items = @room.items.map { |item| item['name'] }.join(', ').colorize(:light_yellow)
-        mobs  = @room.mobs.map  { |mob|  mob['mob_name'] }.join(', ').colorize(:light_red)
-        puts @room.name.colorize(:light_blue) +": ".colorize(:light_black) + @room.desc.colorize(:white)
-        puts "doors: [".colorize(:light_black) + doors +"]".colorize(:light_black) if doors.length>0
-        puts "items: [".colorize(:light_black) + items +"]".colorize(:light_black) if items.length>0
-        puts "mobs: [".colorize(:light_black)  + mobs  +"]".colorize(:light_black) if mobs.length>0
+        doors = @room.doors.map { |door| door['room_name'] }.join(', ').light_blue
+        items = @room.items.map { |item| item['name']      }.join(', ').light_yellow
+        mobs  = @room.mobs.map  { |mob|  mob['mob_name']   }.join(', ').light_red
+        puts @room.name.light_blue << ": ".light_black << @room.desc.white
+        puts "doors: [".light_black + doors +"]".light_black if doors.length>0
+        puts "items: [".light_black + items +"]".light_black if items.length>0
+        puts "mobs: [".light_black  + mobs  +"]".light_black if mobs.length>0
       },
       'cd' => lambda { |room_name=nil|
         if room_name.nil?
@@ -94,7 +94,7 @@ class Client
         exists = false
         @room.doors.each do |existing_door|
           if existing_door['room_name'] == room.name
-            puts "INFO: ".colorize(:light_black) + " saving over existing room ".colorize(:light_cyan) + room.name.colorize(:light_blue)
+            puts "INFO: ".light_black + " saving over existing room ".light_cyan + room.name.light_blue
             room._id = existing_door['room_id']
             exists   = true
           end
@@ -113,7 +113,7 @@ class Client
       'touch' => lambda { |item_name, item_desc='an item'|
         @room.items << {'name'=>item_name, 'desc'=>item_desc}
         @room.save!
-        puts "Created item: ".colorize(:light_green) +  item_name
+        puts "Created item: ".light_green +  item_name
       },
       'cat' => lambda { |item_name|
         @room.items.each do |item_data|
@@ -123,16 +123,16 @@ class Client
         end
       },
       'vi' => lambda { |item_name|
-        w = ":w".colorize(:light_green)
-        q = ":q".colorize(:light_red)
-        msg  = "Type '".colorize(:light_black) + w +"' to ".colorize(:light_black) + "write".colorize(:light_green)
-        msg << " and '".colorize(:light_black) + q +"' to ".colorize(:light_black) + "quit".colorize(:light_red)
+        w = ":w".light_green
+        q = ":q".light_red
+        msg  = "Type '".light_black + w +"' to ".light_black + "write".light_green
+        msg << " and '".light_black + q +"' to ".light_black + "quit".light_red
         puts msg
         exists  = false
         lines   = []
         editing = true
         while editing
-          print "> ".colorize(:light_black)
+          print "> ".light_black
           line = $stdin.gets.chomp
           if line =~ /^\:w/
             editing = false
@@ -141,7 +141,7 @@ class Client
               if item_data['name'] == item_name
                 item_data['desc'] = desc
                 @room.save!
-                puts "Changed item: ".colorize(:light_green) + item_name
+                puts "Changed item: ".light_green + item_name
                 exists = true
                 break
               end
@@ -149,7 +149,7 @@ class Client
             @cmd['touch'].call(item_name, desc) if not exists
           elsif line =~ /^\:q/
             editing = false
-            puts "canceled without saving".colorize(:light_red)
+            puts "canceled without saving".light_red
           else
             lines << line
           end
@@ -160,9 +160,9 @@ class Client
         @room.items.delete_if { |i| i['name'] == item_name }
         if @room.items.count < count
           @room.save!
-          puts "Deleted item: ".colorize(:light_yellow) + item_name
+          puts "Deleted item: ".light_yellow + item_name
         else
-          puts "Couldn't find item to delete: ".colorize(:light_red) + item_name
+          puts "Couldn't find item to delete: ".light_red + item_name
         end
       },
       'remember' => lambda {
@@ -208,7 +208,7 @@ class Client
     @saved.name     = saved_name
     @saved.saved_at = Time.now
     @saved.save!
-    puts "Saved as: ".colorize(:light_yellow) + saved_name
+    puts "Saved as: ".light_yellow + saved_name
   end
 
   def ls_saves
@@ -226,17 +226,17 @@ class Client
   def rm_save(name)
     _id = find_save_id(name)
     if _id.nil?
-      puts "couldn't find save: ".colorize(:light_red) + name
+      puts "couldn't find save: ".light_red + name
     else
       @db.destroy!('saves', _id)
-      puts "Deleted save: ".colorize(:light_red) + name
+      puts "Deleted save: ".light_red + name
     end
   end
 
   def load_save(name)
     _id = find_save_id(name)
     if _id.nil?
-      puts "couldn't load save: ".colorize(:light_red) + name
+      puts "couldn't load save: ".light_red + name
     else
       saved = Model.new(@db, 'saves', _id)
       @db.destroy_collection!('rooms')
@@ -250,7 +250,7 @@ class Client
       @home = Model.new(@db, 'rooms', saved.home_id)
       @user = Model.new(@db, 'users', saved.user_id)
       @room = Model.new(@db, 'rooms', @user.room_id)
-      puts "Loaded save: ".colorize(:light_yellow) + name
+      puts "Loaded save: ".light_yellow + name
       @cmd['ls'].call
     end
   end
@@ -269,10 +269,10 @@ class Client
 
   def prompt
     s = ""
-    s << @user.name.colorize(:light_magenta)
-    s << "@".colorize(:light_black)
-    s << @room.name.colorize(:light_blue)
-    s << "> ".colorize(:light_black)
+    s << @user.name.light_magenta
+    s << "@".light_black
+    s << @room.name.light_blue
+    s << "> ".light_black
   end
 
   def run
@@ -285,7 +285,7 @@ class Client
         begin
           cmd, *args = Shellwords.shellsplit(line)
         rescue Exception => e
-          puts "command failed: ".colorize(:light_red) + line
+          puts "command failed: ".light_red + line
           puts "  #{e.to_s}"
           e.backtrace.each { |bt| puts "  #{bt}".light_black }
           next
@@ -295,13 +295,13 @@ class Client
           begin
             @cmd[cmd].call(*args)
           rescue Exception => e
-            puts "command failed: ".colorize(:light_red) + line
+            puts "command failed: ".light_red + line
             puts "  #{e.to_s}"
             e.backtrace.each { |bt| puts "  #{bt}".light_black }
             next
           end
         else
-          puts "unknown command: ".colorize(:light_red) + line
+          puts "unknown command: ".light_red + line
         end
       end
     ensure
