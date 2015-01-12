@@ -160,6 +160,9 @@ class Client
           @world.create_doors!(@world.current_room, @world.get_remembered_room)
           puts "created a link to: ".light_green + room.name
         end
+      },
+      'rm_mob' => lambda { |name|
+        @world.destroy_mob!(@world.current_room, name)
       }
     }
 
