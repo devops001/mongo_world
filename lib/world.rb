@@ -154,11 +154,11 @@ class World
   ## rooms:
   ########################
 
-  def room!(_id)
+  def find_room!(_id)
     Model.new(@db, 'rooms', _id)
   end 
 
-  def rooms!
+  def find_rooms!
     rooms = []
     @db.all!('rooms').each do |data|
       rooms << create_room_from_data(data)
@@ -194,14 +194,14 @@ class World
 
   def get_remembered_room
     return nil if @user.remembered.nil?
-    room!(@user.remembered['room_id'])
+    find_room!(@user.remembered['room_id'])
   end
 
   ########################
   ## users:
   ########################
 
-  def users!
+  def find_users!
     users = []
     @db.all!('users').each do |data|
       users << create_user_from_data(data)

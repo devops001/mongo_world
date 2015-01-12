@@ -24,23 +24,23 @@ class WorldTest < Minitest::Test
   end
 
   def test_destroy_collections!
-    assert(@world.rooms!.count, 1)
-    assert(@world.users!.count, 1)
+    assert(@world.find_rooms!.count, 1)
+    assert(@world.find_users!.count, 1)
     @world.destroy_collections!
-    assert(@world.rooms!.count, 0)
-    assert(@world.users!.count, 0)
+    assert(@world.find_rooms!.count, 0)
+    assert(@world.find_users!.count, 0)
   end
 
   def test_destroy_database!
-    assert(@world.rooms!.count, 1)
-    assert(@world.users!.count, 1)
+    assert(@world.find_rooms!.count, 1)
+    assert(@world.find_users!.count, 1)
     @world.destroy_database!
-    assert(@world.rooms!.count, 0)
-    assert(@world.users!.count, 0)
+    assert(@world.find_rooms!.count, 0)
+    assert(@world.find_users!.count, 0)
   end
 
   def test_create_room
-    assert(@world.rooms!.count, 1)
+    assert(@world.find_rooms!.count, 1)
     10.times.each do |i|
       name = "room_#{i}"
       desc = "a room with a #{i} painted on the wall"
@@ -49,7 +49,7 @@ class WorldTest < Minitest::Test
       assert_equal(name, room.name)
       assert_equal(desc, room.desc)
     end
-    assert(@world.rooms!.count, 11)
+    assert(@world.find_rooms!.count, 11)
   end
 
   def test_update_current_room!
@@ -93,10 +93,10 @@ class WorldTest < Minitest::Test
     assert(@world.save!('default'))
 
     @db.destroy!('rooms', @world.home._id)
-    assert_equal(0, @world.rooms!.count)
+    assert_equal(0, @world.find_rooms!.count)
 
     assert(@world.load_save!('default'))
-    assert_equal(1, @world.rooms!.count)
+    assert_equal(1, @world.find_rooms!.count)
 
     assert_equal('a velcro shoe', @world.home.items[0]['desc'])
 
@@ -188,18 +188,40 @@ class WorldTest < Minitest::Test
   end
 
   def test_get_door_index
+    room1 = @world.create_room!('library', 'a library')
+    room2 = @world.create_room!('lab',     'a laboratory')
+    room3 = @world.create_room!('kitchen', 'a kitchen')
+
+    @world.create_doors!(@world.current_room, room1)
+    @world.create_doors!(@world.current_room, room2)
+    @world.create_doors!(@world.current_room, room3)
+
+    doors = @world.current_room.doors
+    assert_equal(0,   @world.get_door_index(doors, room1.name))
+    assert_equal(1,   @world.get_door_index(doors, room2.name))
+    assert_equal(2,   @world.get_door_index(doors, room3.name))
+    assert_equal(nil, @world.get_door_index(doors, 'fake_room'))
   end
 
   def test_set_debug
+    5.times.each do
+      @world.set_debug(true)
+      assert_equal(true, @world.debug?)
+    end
+    5.times.each do
+      @world.set_debug(false)
+      assert_equal(false, @world.debug?)
+    end
   end
 
   def test_debug?
+    assert_equal(false, @world.debug?, 'should start out with debug turned off')
   end
 
-  def test_room!
+  def test_find_room!
   end
 
-  def test_rooms!
+  def test_find_rooms!
   end
 
   def test_create_room!
@@ -211,7 +233,7 @@ class WorldTest < Minitest::Test
   def test_get_remembered_room
   end
 
-  def test_users!
+  def test_find_users!
   end
 
   def test_create_user
