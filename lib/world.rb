@@ -64,7 +64,12 @@ class World
 
   def destroy_save!(name)
     id = get_save_id!(name)
-    @db.destroy!('saves', id)
+    if id
+      @db.destroy!('saves', id)
+      true
+    else
+      false
+    end
   end
 
   ########################

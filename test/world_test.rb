@@ -131,12 +131,38 @@ class WorldTest < Minitest::Test
   end
 
   def test_destroy_save!
+    assert(@world.save!('world'))
+    assert(@world.get_save_id!('world'))
+    assert(@world.destroy_save!('world'))
+    assert_equal(nil, @world.get_save_id!('world'))
+    assert_equal(false, @world.destroy_save!('world'))
   end
 
   def test_create_doors!
+    room1 = @world.create_room!('room1', 'room one')
+    room2 = @world.create_room!('room2', 'room two')
+    assert_equal(0, room1.doors.count)
+    assert_equal(0, room2.doors.count)
+    5.times.each do 
+      @world.create_doors!(room1, room2)
+      assert_equal(1, room1.doors.count)
+      assert_equal(1, room2.doors.count)
+      assert_equal('room1',   room2.doors[0]['room_name'])
+      assert_equal(room1._id, room2.doors[0]['room_id'])
+      assert_equal('room2',   room1.doors[0]['room_name'])
+      assert_equal(room2._id, room1.doors[0]['room_id'])
+    end
   end
 
   def test_remove_doors!
+    room1 = @world.create_room!('room1', 'room one')
+    room2 = @world.create_room!('room2', 'room two')
+    @world.create_doors!(room1, room2)
+    5.times.each do
+      @world.remove_doors!(room1, room2)
+      assert_equal(0, room1.doors.count)
+      assert_equal(0, room2.doors.count)
+    end
   end
 
   def test_get_room_from_door
