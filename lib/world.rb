@@ -30,9 +30,7 @@ class World
 	def rooms!
 		rooms = []
 		@db.all!('rooms').each do |data|
-			room      = create_room('','')
-			room.data = data
-			rooms << room
+      rooms << create_room_from_data(data)
 		end
 		rooms
 	end
@@ -70,8 +68,9 @@ class World
 	def users!
 		users = []
 		@db.all!('users').each do |data|
-			user = create_user(data['name'], data['desc'])
+      users << create_user_from_data(data)
 		end
+    users
 	end
 
 	def create_user(name, desc, room_id)	
