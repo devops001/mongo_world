@@ -171,9 +171,20 @@ class WorldTest < Minitest::Test
     room = @world.get_room_from_door('room1')
     assert_equal(room._id,  room1._id)
     assert_equal(room.name, room1.name)
+
+    assert_equal(nil, @world.get_room_from_door('fake_room'))
+    assert_equal(nil, @world.get_room_from_door('fake_room2'))
   end
 
   def test_create_door_data
+    door = @world.create_door_data(@world.home)
+    assert_equal('home',          door['room_name'])
+    assert_equal(@world.home._id, door['room_id'])
+
+    room = @world.create_room!('library', 'a library')
+    door = @world.create_door_data(room)
+    assert_equal('library', door['room_name'])
+    assert_equal(room._id,  door['room_id'])
   end
 
   def test_get_door_index
