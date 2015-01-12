@@ -15,10 +15,12 @@ class Model
 
   def refresh!
     @data = @db.find!(@colname, @data['_id']) if @data['_id']
+    self
   end
 
   def save!
     @data = @db.save!(@colname, @data) 
+    self
   end
 
   def method_missing(meth, *args, &block)

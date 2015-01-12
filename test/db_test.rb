@@ -14,10 +14,10 @@ class DbTest < Minitest::Test
   def test_toggle_debug
     assert_equal(false, @db.debug?)
 
-    assert_equal(true,  @db.toggle_debug)
+    assert_equal(true,  @db.set_debug(true))
     assert_equal(true, @db.debug?)
 
-    assert_equal(false,  @db.toggle_debug)
+    assert_equal(false,  @db.set_debug(false))
     assert_equal(false, @db.debug?)
   end
 

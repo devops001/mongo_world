@@ -37,8 +37,8 @@ class Db
     puts msg if @debug
   end
 
-  def toggle_debug
-    @debug = !@debug
+  def set_debug(bool=true)
+    @debug = bool
   end
 
   def debug?
