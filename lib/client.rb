@@ -92,12 +92,12 @@ class Client
         @world.room.save!
         echo "updated: ".light_green + @world.room.name
       },
-      'touch' => lambda { |name, desc='an item'|
-        @world.upsert_item!(@world.room, @world.create_item_data(name, desc))
-        echo "touched item: ".light_green +  item_name
+      'touch' => lambda { |item_name, item_desc='an item'|
+        @world.upsert_item!(@world.room, @world.create_item_data(item_name, item_desc))
+        echo "touched item: ".light_green + item_name
       },
       'cat' => lambda { |item_name|
-        item = @world.get_item_data(item_name)
+        item = @world.get_item_data(@world.room, item_name)
         if item
           echo item['desc']
         else
