@@ -240,6 +240,10 @@ class WorldTest < Minitest::Test
   end
 
   def test_create_room!
+    10.times.each do |i|
+      room = @world.create_room!("room_#{i}", "a room")
+      assert_equal(room.name, @db.find!('rooms', room._id)['name'])
+    end
   end
 
   def test_create_room_from_data
