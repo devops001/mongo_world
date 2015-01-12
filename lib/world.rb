@@ -5,9 +5,9 @@ require_relative 'model'
 class World
   attr_reader :home, :user, :room
 
-	def initialize(dbname)
-		@dbname = dbname
-		@db     = Db.new(dbname)
+  def initialize(dbname)
+    @dbname = dbname
+    @db     = Db.new(dbname)
     @home   = create_room!('home', 'a home')
     @user   = create_user!('user', 'a user', @home._id)
     update_current_room!
@@ -17,9 +17,9 @@ class World
     @room = Model.new(@db, 'rooms', @user.room_id)
   end
 
-	########################
-	## saving:
-	########################
+  ########################
+  ## saving:
+  ########################
 
   def save!(saved_name)
     saved          = Model.new(@db, 'saves', get_save_id!(saved_name))
@@ -67,9 +67,9 @@ class World
     @db.destroy!('saves', id)
   end
 
-	########################
-	## doors:
-	########################
+  ########################
+  ## doors:
+  ########################
 
   def create_doors!(room1, room2)
     index1 = get_door_index(room1.doors, room2.name)
@@ -121,9 +121,9 @@ class World
     index
   end
 
-	########################
-	## database:
-	########################
+  ########################
+  ## database:
+  ########################
 
   def set_debug(bool)
     @db.set_debug(bool)
@@ -133,104 +133,104 @@ class World
     @db.debug?
   end
 
-	def collection_names
-		%w/rooms users items/
-	end
+  def collection_names
+    %w/rooms users items/
+  end
 
-	def destroy_collections!
-		collection_names.each { |name| @db.destroy_collection!(name) }
-	end
+  def destroy_collections!
+    collection_names.each { |name| @db.destroy_collection!(name) }
+  end
 
-	def destroy_database!
-		@db.destroy_all!
-	end
+  def destroy_database!
+    @db.destroy_all!
+  end
 
-	########################
-	## rooms:
-	########################
+  ########################
+  ## rooms:
+  ########################
 
   def room!(_id)
     Model.new(@db, 'rooms', _id)
   end 
 
-	def rooms!
-		rooms = []
-		@db.all!('rooms').each do |data|
+  def rooms!
+    rooms = []
+    @db.all!('rooms').each do |data|
       rooms << create_room_from_data(data)
-		end
-		rooms
-	end
+    end
+    rooms
+  end
 
-	def create_room(name, desc)
-		room       = Model.new(@db, 'rooms')
-		room.name  = name
-		room.desc  = desc
-		room.items = []
-		room.mobs  = []
-		room.doors = []
-		room
-	end
+  def create_room(name, desc)
+    room       = Model.new(@db, 'rooms')
+    room.name  = name
+    room.desc  = desc
+    room.items = []
+    room.mobs  = []
+    room.doors = []
+    room
+  end
 
-	def create_room!(name, desc)
-		room = create_room(name, desc)
-		room.save!
-		room
-	end
+  def create_room!(name, desc)
+    room = create_room(name, desc)
+    room.save!
+    room
+  end
 
-	def create_room_from_data(data)
-		room       = Model.new(@db, 'rooms')
-		room.name  = data['name']  or 'room'
-		room.desc  = data['desc']  or 'a room'
-		room.doors = data['doors'] or []
-		room.items = data['items'] or []
-		room.mobs  = data['mobs']  or []
-		room
-	end
+  def create_room_from_data(data)
+    room       = Model.new(@db, 'rooms')
+    room.name  = data['name']  or 'room'
+    room.desc  = data['desc']  or 'a room'
+    room.doors = data['doors'] or []
+    room.items = data['items'] or []
+    room.mobs  = data['mobs']  or []
+    room
+  end
 
   def get_remembered_room
     return nil if @user.remembered.nil?
     room!(@user.remembered['room_id'])
   end
 
-	########################
-	## users:
-	########################
+  ########################
+  ## users:
+  ########################
 
-	def users!
-		users = []
-		@db.all!('users').each do |data|
+  def users!
+    users = []
+    @db.all!('users').each do |data|
       users << create_user_from_data(data)
-		end
+    end
     users
-	end
+  end
 
-	def create_user(name, desc, room_id)	
-		user            = Model.new(@db, 'users')
+  def create_user(name, desc, room_id)  
+    user            = Model.new(@db, 'users')
     user.name       = name
     user.desc       = desc
     user.room_id    = room_id
     user.remembered = nil
-		user
-	end
+    user
+  end
 
-	def create_user!(name, desc, room_id)
-		user = create_user(name, desc, room_id)
-		user.save!
-		user
-	end
+  def create_user!(name, desc, room_id)
+    user = create_user(name, desc, room_id)
+    user.save!
+    user
+  end
 
-	def create_user_from_data(data)
-		user            = Model.new(@db, 'users')
-		user.name       = data['name']       or 'user'
-		user.desc       = data['desc']       or 'a user'
-		user.room_id    = data['room_id']    or @home._id
-		user.remembered = data['remembered'] or nil
-		user
-	end
+  def create_user_from_data(data)
+    user            = Model.new(@db, 'users')
+    user.name       = data['name']       or 'user'
+    user.desc       = data['desc']       or 'a user'
+    user.room_id    = data['room_id']    or @home._id
+    user.remembered = data['remembered'] or nil
+    user
+  end
 
-	########################
-	## items:
-	########################
+  ########################
+  ## items:
+  ########################
 
   def create_item_data(name, desc)
     {'name'=>name, 'desc'=>desc}
@@ -271,9 +271,9 @@ class World
     end
   end
 
-	########################
-	## mobs:
-	########################
+  ########################
+  ## mobs:
+  ########################
 
   def create_mob_data(name, desc)
     {'name'=>name, 'desc'=>desc}

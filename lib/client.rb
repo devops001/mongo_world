@@ -78,7 +78,7 @@ class Client
         @world.create_doors!(room, @world.room)
         echo "created room: ".light_green + name
       },
-			'rmdir' => lambda { |name|
+      'rmdir' => lambda { |name|
         room = @world.get_room_from_door(name)
         if room
           @world.remove_doors!(room, @world.room)
@@ -86,7 +86,7 @@ class Client
         else
           echo "no door found for name: ".light_red + name
         end
-			},
+      },
       'desc' => lambda { |new_description|
         @world.room.desc = new_description
         @world.room.save!
