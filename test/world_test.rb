@@ -24,23 +24,23 @@ class WorldTest < Minitest::Test
   end
 
   def test_destroy_collections!
-    assert(@world.find_rooms!.count, 1)
+    assert(@world.all_rooms!.count, 1)
     assert(@world.find_users!.count, 1)
     @world.destroy_collections!
-    assert(@world.find_rooms!.count, 0)
+    assert(@world.all_rooms!.count, 0)
     assert(@world.find_users!.count, 0)
   end
 
   def test_destroy_database!
-    assert(@world.find_rooms!.count, 1)
+    assert(@world.all_rooms!.count, 1)
     assert(@world.find_users!.count, 1)
     @world.destroy_database!
-    assert(@world.find_rooms!.count, 0)
+    assert(@world.all_rooms!.count, 0)
     assert(@world.find_users!.count, 0)
   end
 
   def test_create_room
-    assert(@world.find_rooms!.count, 1)
+    assert(@world.all_rooms!.count, 1)
     10.times.each do |i|
       name = "room_#{i}"
       desc = "a room with a #{i} painted on the wall"
@@ -49,7 +49,7 @@ class WorldTest < Minitest::Test
       assert_equal(name, room.name)
       assert_equal(desc, room.desc)
     end
-    assert(@world.find_rooms!.count, 11)
+    assert(@world.all_rooms!.count, 11)
   end
 
   def test_update_current_room!
@@ -93,10 +93,10 @@ class WorldTest < Minitest::Test
     assert(@world.save!('default'))
 
     @db.destroy!('rooms', @world.home._id)
-    assert_equal(0, @world.find_rooms!.count)
+    assert_equal(0, @world.all_rooms!.count)
 
     assert(@world.load_save!('default'))
-    assert_equal(1, @world.find_rooms!.count)
+    assert_equal(1, @world.all_rooms!.count)
 
     assert_equal('a velcro shoe', @world.home.items[0]['desc'])
 
@@ -228,7 +228,15 @@ class WorldTest < Minitest::Test
     assert_equal(nil, @world.find_room!(0))
   end
 
-  def test_find_rooms!
+  def test_all_rooms!
+    assert_equal(1, @world.all_rooms!.count)
+    10.times.each { |i| @world.create_room!("room_#{i}", "a room") }
+
+    rooms = @world.all_rooms!
+    assert_equal(11, rooms.count)
+
+    names = rooms.map { |r| r.name }
+    10.times.each { |i| assert(names.include?("room_#{i}")) }
   end
 
   def test_create_room!

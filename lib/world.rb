@@ -159,7 +159,7 @@ class World
     data.nil? ? nil : create_room_from_data(data)
   end 
 
-  def find_rooms!
+  def all_rooms!
     rooms = []
     @db.all!('rooms').each do |data|
       rooms << create_room_from_data(data)
