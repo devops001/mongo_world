@@ -276,6 +276,19 @@ class WorldTest < Minitest::Test
   end
 
   def test_get_remembered_room
+    assert_equal(nil, @world.get_remembered_room)
+    
+    kitchen = @world.create_room!('kitchen', 'a small kitchen')
+    @world.user.remembered = @world.create_door_data(kitchen)
+    @world.user.save!
+    
+    room = @world.get_remembered_room
+    assert(room)
+    assert_equal(kitchen._id,  room._id)
+    assert_equal(kitchen.name, room.name)
+    assert_equal(kitchen.desc, room.desc)
+    assert_equal(kitchen.items, room.items)
+    assert_equal(kitchen.mobs,  room.mobs)
   end
 
   def test_find_users!
