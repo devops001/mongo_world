@@ -282,5 +282,33 @@ class World
     {'name'=>name, 'desc'=>desc}
   end
 
+  def get_mob_index(room, mob_name)
+    room.mobs.each_with_index do |mob, i|
+      return i if mob['name'] == mob_name
+    end
+    nil
+  end
+
+  def upsert_mob!(room, mob_data)
+    index = get_mob_index(room, mob_data['name'])
+    if index
+      room.mobs[index] = mob_data
+    else
+      room.mobs << mob_data
+    end
+    room.save!
+  end
+
+  def destroy_mob!(room, mob_name)
+    index = get_mob_index(room, mob_name)
+    if index
+      room.mobs.delete_at(index)
+      room.save!
+      true
+    else
+      false
+    end
+  end
+
 end
 

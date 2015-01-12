@@ -401,4 +401,35 @@ class WorldTest < Minitest::Test
     assert_equal(mob, @world.create_mob_data('frog', 'green'))
   end
 
+  def test_upsert_mob!
+    assert_equal(0, @world.home.mobs.count)
+
+    10.times.each { |i| @world.upsert_mob!(@world.home, @world.create_mob_data("mob_#{i}", "a mob")) }
+    assert_equal(10, @world.home.mobs.count)
+
+    10.times.each { |i| @world.upsert_mob!(@world.home, @world.create_mob_data("mob_#{i}", "a big mob")) }
+    assert_equal(10, @world.home.mobs.count)
+
+    10.times.each { |i| @world.upsert_mob!(@world.home, @world.create_mob_data("happy_mob_#{i}", "a happy mob")) }
+    assert_equal(20, @world.home.mobs.count)
+  end
+
+  def test_get_mob_index
+    10.times.each { |i| @world.upsert_mob!(@world.home, @world.create_mob_data("mob_#{i}", "a mob")) }
+    10.times.each { |i| assert_equal(i, @world.get_mob_index(@world.home, "mob_#{i}")) }
+    assert_equal(nil, @world.get_mob_index(@world.home, "fake"))
+  end
+
+  def test_destroy_mob!
+    assert_equal(0, @world.home.mobs.count)
+
+    10.times.each { |i| @world.upsert_mob!(@world.home, @world.create_mob_data("mob_#{i}", "a mob")) }
+    assert_equal(10, @world.home.mobs.count)
+
+    10.times.each { |i| assert(@world.destroy_mob!(@world.home, "mob_#{i}")) }
+    assert_equal(0, @world.home.mobs.count)
+
+    10.times.each { |i| assert_equal(false, @world.destroy_mob!(@world.home, "fake_#{i}")) }
+  end
+
 end
