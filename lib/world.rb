@@ -3,7 +3,7 @@ require_relative 'db'
 require_relative 'model'
 
 class World
-  attr_reader :home, :user, :room
+  attr_reader :home, :user, :current_room
 
   def initialize(dbname)
     @dbname = dbname
@@ -14,7 +14,7 @@ class World
   end
 
   def update_current_room!
-    @room = Model.new(@db, 'rooms', @user.room_id)
+    @current_room = Model.new(@db, 'rooms', @user.room_id)
   end
 
   ########################
@@ -46,7 +46,7 @@ class World
     end
     @home = Model.new(@db, 'rooms', saved.home_id)
     @user = Model.new(@db, 'users', saved.user_id)
-    @room = Model.new(@db, 'rooms', @user.room_id)
+    @current_room = Model.new(@db, 'rooms', @user.room_id)
     true
   end
 
@@ -107,8 +107,8 @@ class World
   end
 
   def get_room_from_door(room_name)
-    index = get_door_index(@room.doors, room_name)
-    index.nil? ? nil : Model.new(@db, 'rooms', @room.doors[index]['room_id'])
+    index = get_door_index(@current_room.doors, room_name)
+    index.nil? ? nil : Model.new(@db, 'rooms', @current_room.doors[index]['room_id'])
   end
 
   def create_door_data(room)

@@ -7,7 +7,6 @@ class WorldTest < Minitest::Test
     @world = World.new('testdb')
     @db    = @world.instance_variable_get(:@db)
     @home  = @world.instance_variable_get(:@home)
-    @room  = @world.instance_variable_get(:@room)
     @user  = @world.instance_variable_get(:@user)
   end
 
@@ -17,7 +16,6 @@ class WorldTest < Minitest::Test
 
   def test_instance_models
     assert(@home._id)
-    assert(@room._id) 
     assert(@user._id) 
   end
 
@@ -55,16 +53,16 @@ class WorldTest < Minitest::Test
   end
 
   def test_update_current_room!
-    assert_equal('home', @world.room.name)
+    assert_equal('home', @world.current_room.name)
 
-    data = @db.find!('rooms', @world.room._id)
+    data = @db.find!('rooms', @world.current_room._id)
     data['color'] = 'blue'
     @db.save!('rooms', data)
 
-    assert_raises(NoMethodError) { @world.room.color }
+    assert_raises(NoMethodError) { @world.current_room.color }
 
     @world.update_current_room!
-    assert_equal('blue', @world.room.color)
+    assert_equal('blue', @world.current_room.color)
   end
 
   def test_save!
@@ -166,6 +164,13 @@ class WorldTest < Minitest::Test
   end
 
   def test_get_room_from_door
+    room1 = @world.create_room!('room1', 'room one')
+    @world.create_doors!(room1, @world.current_room)
+    @world.update_current_room!
+
+    room = @world.get_room_from_door('room1')
+    assert_equal(room._id,  room1._id)
+    assert_equal(room.name, room1.name)
   end
 
   def test_create_door_data
