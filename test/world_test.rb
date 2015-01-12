@@ -219,6 +219,13 @@ class WorldTest < Minitest::Test
   end
 
   def test_find_room!
+    hall  = @world.create_room!('hall', 'a hall')
+    found = @world.find_room!(hall._id)
+    assert(found)
+    assert_equal(hall._id,  found._id)
+    assert_equal(hall.name, found.name)
+    assert_equal(hall.desc, found.desc)
+    assert_equal(nil, @world.find_room!(0))
   end
 
   def test_find_rooms!

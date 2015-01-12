@@ -155,7 +155,8 @@ class World
   ########################
 
   def find_room!(_id)
-    Model.new(@db, 'rooms', _id)
+    data = @db.find!('rooms', _id)
+    data.nil? ? nil : create_room_from_data(data)
   end 
 
   def find_rooms!
@@ -184,6 +185,7 @@ class World
 
   def create_room_from_data(data)
     room       = Model.new(@db, 'rooms')
+    room._id   = data['_id']
     room.name  = data['name']  or 'room'
     room.desc  = data['desc']  or 'a room'
     room.doors = data['doors'] or []
