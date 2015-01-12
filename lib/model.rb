@@ -34,4 +34,9 @@ class Model
   def to_s
     @data.inspect
   end
+
+	def data=(data)
+		@data = data
+	end
+
 end

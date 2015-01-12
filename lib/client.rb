@@ -3,6 +3,7 @@
 require 'shellwords'
 require_relative 'model'
 require_relative 'mob'
+require_relative 'world'
 
 class Client
 
@@ -106,6 +107,23 @@ class Client
           @room.save!
         end
       },
+			'rmdir' => lambda { |name|
+				room = nil
+				@room.doors.each do |door|
+					if door['room_name'] == name
+						room = Model.new(@db, 'rooms', door['room_id'])
+						break
+					end
+				end
+				if room.nil?
+					echo "no room found with name: ".light_red + name
+					return nil
+				end
+
+				# TODO: finish
+
+
+			},
       'desc' => lambda { |new_description|
         @room.desc = new_description
         @room.save!
