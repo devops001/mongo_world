@@ -260,14 +260,15 @@ class World
     room.save!
   end
 
-  def remove_item!(room, item_name)
+  def destroy_item!(room, item_name)
     index = get_item_index(room, item_name)
     if index
       room.items.delete_at(index)
       room.save!
       true
+    else
+      false
     end
-    false
   end
 
 	########################

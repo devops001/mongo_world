@@ -129,15 +129,15 @@ class Client
         end
       },
       'rm_item' => lambda { |item_name|
-        if @world.remove_item!(@world.room, item_name)
-          echo "deleted item: ".light_green + item_name
+        if @world.destroy_item!(@world.room, item_name)
+          echo "destroyed item: ".light_green + item_name
         else
           echo "no item found with name:  ".light_red + item_name
         end
       },
       'remember' => lambda {
         @world.user.remembered = @world.create_door_data(@world.room)
-        @user.save!
+        @world.user.save!
         echo "you will remember this room: ".light_green + @world.room.name.light_blue
       },
       'remembered' => lambda {
