@@ -106,9 +106,28 @@ class WorldTest < Minitest::Test
   end
 
   def test_get_save_names!
+    assert_equal(0, @world.get_save_names!.count)
+    @world.save!('default')
+    assert_equal(1, @world.get_save_names!.count)
+    @world.save!('default')
+    assert_equal(1, @world.get_save_names!.count)
+    @world.save!('another')
+    assert_equal(2, @world.get_save_names!.count)
+
+    names = @world.get_save_names!
+    assert(names.include?('default'))
+    assert(names.include?('another'))
   end
 
   def test_get_save_id!
+    @world.save!('testworld')
+    10.times.each { |i| @world.save!("save_#{i}") }
+    id1 = @world.get_save_id!('testworld')
+    assert(id1)
+    id2 = @world.get_save_id!("save_1")
+    assert(id2)
+    assert(id1 != id2)
+    assert_equal(nil, @world.get_save_id!('fake'))
   end
 
   def test_destroy_save!
