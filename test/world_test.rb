@@ -309,28 +309,96 @@ class WorldTest < Minitest::Test
   end
 
   def test_create_user!
+    user = @world.create_user!('joe', 'man', @world.home._id)
+    assert_equal('joe', user.name)
+    assert_equal('man', user.desc)
+    assert_equal(@world.home._id, user.room_id)
+    assert(user._id)
+    assert(@db.find!('users', user._id))
   end
 
   def test_create_user_from_data
+    data = { 'name'=>'joe', 'desc'=>'man', 'room_id'=>4, 'color'=>'red', 'size'=>3}
+    user = @world.create_user_from_data(data)
+    assert_equal('joe', user.name)
+    assert_equal('man', user.desc)
+    assert_equal(4,     user.room_id)
+    assert_equal('red', user.color)
+    assert_equal(3,     user.size)
+    assert_raises(NoMethodError) { user._id }
+
+    data = { 'health' => 5 }
+    user = @world.create_user_from_data(data)
+    assert_equal('user',          user.name)
+    assert_equal('a user',        user.desc)
+    assert_equal(@world.home._id, user.room_id)
+    assert_equal(5,               user.health)
+    assert_raises(NoMethodError) { user._id }
+
+    data = {}
+    user = @world.create_user_from_data(data)
+    assert_equal('user',          user.name)
+    assert_equal('a user',        user.desc)
+    assert_equal(@world.home._id, user.room_id)
+    assert_raises(NoMethodError) { user._id    }
+    assert_raises(NoMethodError) { user.health }
   end
 
   def test_create_item_data
+    item = { 'name'=>'book', 'desc'=>'a book' }
+    assert_equal(item, @world.create_item_data(item['name'], item['desc']))
+    assert_equal({'name'=>'one','desc'=>'two'}, @world.create_item_data('one', 'two'))
   end
 
   def test_get_item_data
+    assert_equal(nil, @world.get_item_data(@world.home, 'fake1'))
+
+    @world.home.items << @world.create_item_data('spoon', 'a spoon')
+    @world.home.save!
+
+    assert_equal(nil, @world.get_item_data(@world.home, 'fake2'))
+    assert_equal('a spoon', @world.get_item_data(@world.home, 'spoon')['desc'])
   end
 
   def test_get_item_index
+    assert_equal(nil, @world.get_item_index(@world.home, 'fake1'))
+    10.times.each { |i| @world.upsert_item!(@world.home, @world.create_item_data("item_#{i}", "an item")) }
+    10.times.each { |i| assert_equal(i, @world.get_item_index(@world.home, "item_#{i}")) }
+    assert_equal(nil, @world.get_item_index(@world.home, 'fake1'))
   end
 
   def test_upsert_item!
+    assert_equal(0, @world.home.items.count)
+
+    data = @world.create_item_data('shoe', 'a shoe')
+    @world.upsert_item!(@world.home, data)
+    assert_equal(1, @world.home.items.count)
+
+    data['desc'] = 'a stuffed clown toy'
+    @world.upsert_item!(@world.home, data)
+
+    assert_equal(1, @world.home.items.count)
+
+    found = @world.get_item_data(@world.home, 'shoe')
+    assert_equal(found['desc'], 'a stuffed clown toy')
+
+    @world.upsert_item!(@world.home, {'name'=>'box', 'desc'=>'a box'})
+    assert_equal(2, @world.home.items.count)
   end
 
   def test_destroy_item!
+    assert_equal(0, @world.home.items.count)
+    @world.upsert_item!(@world.home, {'name'=>'box', 'desc'=>'a box'})
+    assert_equal(1, @world.home.items.count)
+    assert(@world.destroy_item!(@world.home, 'box'))
+    assert_equal(0, @world.home.items.count)
+    10.times.each { assert_equal(false, @world.destroy_item!(@world.home, 'box')) }
+    assert_equal(0, @world.home.items.count)
   end
 
   def test_create_mob_data
+    mob = {'name'=>'frog', 'desc'=>'green'}
+    assert_equal(mob, @world.create_mob_data('frog', 'green'))
   end
-
 
 end
