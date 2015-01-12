@@ -346,6 +346,10 @@ class WorldTest < Minitest::Test
     assert_raises(NoMethodError) { user.health }
   end
 
+  def test_find_user!
+    assert(false, 'not implemented yet')
+  end
+
   def test_create_item_data
     item = { 'name'=>'book', 'desc'=>'a book' }
     assert_equal(item, @world.create_item_data(item['name'], item['desc']))

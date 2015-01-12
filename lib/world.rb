@@ -189,6 +189,11 @@ class World
   ## users:
   ########################
   
+  def find_user!(_id)
+    data = @db.find!('users', _id)
+    data.nil? ? nil : create_user_from_data(data)
+  end 
+
   def all_users!
     users = []
     @db.all!('users').each do |data|

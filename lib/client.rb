@@ -12,7 +12,8 @@ class Client
 
     @home = @world.create_room!('home', 'home')
     @user = @world.create_user!('user', 'user', @home._id)
-    @room = @world.find_room!(@user.room_id)
+    update_current_room!
+
 
     @cmd = {
       'exit' => lambda { 
@@ -25,13 +26,16 @@ class Client
         echo @room
       },
       'save' => lambda { |name='default'| 
-        @world.save!(name) 
+        @world.save!(name, @home._id, @user._id) 
       },
       'ls_saves' => lambda { 
         echo @world.get_save_names!.join(', ')
       },
       'load_save' => lambda { |name='default'| 
-        @world.load_save!(name) 
+        saved = @world.load_save!(name) 
+        @user = @world.find_user!(saved.user_id)
+        @home = @world.find_room!(saved.home_id)
+        update_current_room!
       },
       'rm_save' => lambda { |name| 
         @world.destroy_save!(name) 
@@ -71,7 +75,7 @@ class Client
         if next_room_id
           @user.room_id = next_room_id
           @user.save!
-          @room = @world.find_room!(@user._id)
+          update_current_room!
         else
           echo "there is no door for \"#{room_name}\""
         end
@@ -220,7 +224,7 @@ class Client
         end
         next if cmd.nil? or cmd.length==0
         if @cmd[cmd]
-          @room = @world.find_room!(@user._id)
+          update_current_room!
           begin
             @cmd[cmd].call(*args)
           rescue Exception => e
@@ -236,6 +240,10 @@ class Client
     ensure
       @world.destroy_collections!
     end
+  end
+
+  def update_current_room!
+    @room = @world.find_room!(@user.room_id)
   end
 
 end
