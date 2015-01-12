@@ -199,8 +199,8 @@ class World
   ########################
   ## users:
   ########################
-
-  def find_users!
+  
+  def all_users!
     users = []
     @db.all!('users').each do |data|
       users << create_user_from_data(data)
@@ -224,11 +224,10 @@ class World
   end
 
   def create_user_from_data(data)
-    user            = Model.new(@db, 'users')
-    user.name       = data['name']       or 'user'
-    user.desc       = data['desc']       or 'a user'
-    user.room_id    = data['room_id']    or @home._id
-    user.remembered = data['remembered'] or nil
+    user = create_user('user', 'a user', @home._id)
+    data.each_pair do |key,val|
+      user.send("#{key}=", val)
+    end
     user
   end
 

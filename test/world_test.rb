@@ -24,18 +24,18 @@ class WorldTest < Minitest::Test
 
   def test_destroy_collections!
     assert(@world.all_rooms!.count, 1)
-    assert(@world.find_users!.count, 1)
+    assert(@world.all_users!.count, 1)
     @world.destroy_collections!
     assert(@world.all_rooms!.count, 0)
-    assert(@world.find_users!.count, 0)
+    assert(@world.all_users!.count, 0)
   end
 
   def test_destroy_database!
     assert(@world.all_rooms!.count, 1)
-    assert(@world.find_users!.count, 1)
+    assert(@world.all_users!.count, 1)
     @world.destroy_database!
     assert(@world.all_rooms!.count, 0)
-    assert(@world.find_users!.count, 0)
+    assert(@world.all_users!.count, 0)
   end
 
   def test_create_room
@@ -291,10 +291,21 @@ class WorldTest < Minitest::Test
     assert_equal(kitchen.mobs,  room.mobs)
   end
 
-  def test_find_users!
+  def test_all_users!
+    assert_equal(1, @world.all_users!.count)
+    10.times.each { |i| @world.create_user!("user_#{i}", "a user", @world.home._id) }
+    users = @world.all_users!
+    names = users.map { |u| u.name }
+    assert_equal(11, users.count)
+    10.times.each { |i| assert(names.include?("user_#{i}")) }  
   end
 
   def test_create_user
+    user = @world.create_user('joe', 'man', @world.home._id)
+    assert_equal('joe', user.name)
+    assert_equal('man', user.desc)
+    assert_equal(@world.home._id, user.room_id)
+    assert_raises(NoMethodError) { user._id }
   end
 
   def test_create_user!
