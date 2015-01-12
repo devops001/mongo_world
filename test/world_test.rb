@@ -1,13 +1,12 @@
 
 require_relative '../lib/world'
+require 'minitest/autorun'
 
 class WorldTest < Minitest::Test
 
   def setup
     @world = World.new('testdb')
     @db    = @world.instance_variable_get(:@db)
-    @home  = @world.instance_variable_get(:@home)
-    @user  = @world.instance_variable_get(:@user)
   end
 
   def teardown
@@ -15,8 +14,8 @@ class WorldTest < Minitest::Test
   end
 
   def test_instance_models
-    assert(@home._id)
-    assert(@user._id) 
+    assert(@world.home._id)
+    assert(@world.user._id) 
   end
 
   def test_collection_names
@@ -86,9 +85,8 @@ class WorldTest < Minitest::Test
   end
 
   def test_load_save!
-    data = @db.find!('rooms', @world.home._id)
-    data['items'] << {'name'=>'shoe', 'desc'=>'a velcro shoe'}
-    @db.save!('rooms', data)
+    @world.home.items << {'name'=>'shoe', 'desc'=>'a velcro shoe'}
+    @world.home.save!
 
     assert(@world.save!('default'))
 
@@ -247,6 +245,34 @@ class WorldTest < Minitest::Test
   end
 
   def test_create_room_from_data
+    data = {'_id'=>1, 'name'=>'room', 'desc'=>'a room', 'items'=>[], 'mobs'=>[], 'doors'=>[]}
+    room = @world.create_room_from_data(data)
+    assert_equal(data['_id'],   room._id)
+    assert_equal(data['name'],  room.name)
+    assert_equal(data['desc'],  room.desc)
+    assert_equal(data['items'], room.items)
+    assert_equal(data['mobs'],  room.mobs)
+    assert_equal(data['doors'], room.doors)
+
+    data['color'] = 'red'
+    room = @world.create_room_from_data(data)
+    assert_equal(data['_id'],   room._id)
+    assert_equal(data['name'],  room.name)
+    assert_equal(data['desc'],  room.desc)
+    assert_equal(data['items'], room.items)
+    assert_equal(data['mobs'],  room.mobs)
+    assert_equal(data['doors'], room.doors)
+    assert_equal(data['color'], room.color)
+
+    data = { 'pages' => 3 }
+    room = @world.create_room_from_data(data)
+    assert_equal('room',   room.name)
+    assert_equal('a room', room.desc)
+    assert_equal([],       room.items)
+    assert_equal([],       room.mobs)
+    assert_equal([],       room.doors)
+    assert_equal(3,        room.pages)
+    assert_raises(NoMethodError) { room._id }
   end
 
   def test_get_remembered_room

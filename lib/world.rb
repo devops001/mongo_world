@@ -184,13 +184,10 @@ class World
   end
 
   def create_room_from_data(data)
-    room       = Model.new(@db, 'rooms')
-    room._id   = data['_id']
-    room.name  = data['name']  or 'room'
-    room.desc  = data['desc']  or 'a room'
-    room.doors = data['doors'] or []
-    room.items = data['items'] or []
-    room.mobs  = data['mobs']  or []
+    room = create_room('room', 'a room')
+    data.each_pair do |key,val|
+      room.send("#{key}=", val)
+    end
     room
   end
 
