@@ -10,6 +10,10 @@ class Client
     @is_running = false
     @use_stdout = true
 
+    @home = @world.create_room!('home', 'home')
+    @user = @world.create_user!('user', 'user', @home._id)
+    @room = @world.find_room!(@user.room_id)
+
     @cmd = {
       'exit' => lambda { 
         @is_running=false 
@@ -18,7 +22,7 @@ class Client
         echo `clear` 
       },
       'room' => lambda { 
-        echo @world.current_room
+        echo @room
       },
       'save' => lambda { |name='default'| 
         @world.save!(name) 
@@ -44,21 +48,20 @@ class Client
         echo msg
       },
       'ls' => lambda {
-        room  = @world.current_room
-        doors = room.doors.map { |door| door['room_name'] }.join(', ').light_blue
-        items = room.items.map { |item| item['name']      }.join(', ').light_yellow
-        mobs  = room.mobs.map  { |mob|  mob['name']       }.join(', ').light_red
-        echo room.name.light_blue << ": ".light_black << room.desc.white
+        doors = @room.doors.map { |door| door['room_name'] }.join(', ').light_blue
+        items = @room.items.map { |item| item['name']      }.join(', ').light_yellow
+        mobs  = @room.mobs.map  { |mob|  mob['name']       }.join(', ').light_red
+        echo @room.name.light_blue << ": ".light_black << @room.desc.white
         echo "doors: [".light_black + doors +"]".light_black if doors.length>0
         echo "items: [".light_black + items +"]".light_black if items.length>0
         echo "mobs: [".light_black  + mobs  +"]".light_black if mobs.length>0
       },
       'cd' => lambda { |room_name=nil|
         if room_name.nil?
-          next_room_id = @world.home._id
+          next_room_id = @home._id
         else
           next_room_id = nil
-          @world.current_room.doors.each do |door|
+          @room.doors.each do |door|
             if door['room_name'] == room_name
               next_room_id = door['room_id']
               break
@@ -66,38 +69,38 @@ class Client
           end
         end
         if next_room_id
-          @world.user.room_id = next_room_id
-          @world.user.save!
-          @world.update_current_room!
+          @user.room_id = next_room_id
+          @user.save!
+          @room = @world.find_room!(@user._id)
         else
           echo "there is no door for \"#{room_name}\""
         end
       },
       'mkdir' => lambda { |name, desc='a room'|
         room = @world.create_room!(name, desc)
-        @world.create_doors!(room, @world.current_room)
+        @world.create_doors!(room, @room)
         echo "created room: ".light_green + name
       },
       'rmdir' => lambda { |name|
         room = @world.get_room_from_door(name)
         if room
-          @world.remove_doors!(room, @world.current_room)
+          @world.remove_doors!(room, @room)
           echo "removed door to: ".light_green + name
         else
           echo "no door found for name: ".light_red + name
         end
       },
       'desc' => lambda { |new_description|
-        @world.current_room.desc = new_description
-        @world.current_room.save!
-        echo "updated: ".light_green + @world.current_room.name
+        @room.desc = new_description
+        @room.save!
+        echo "updated: ".light_green + @room.name
       },
       'touch' => lambda { |item_name, item_desc='an item'|
-        @world.upsert_item!(@world.current_room, @world.create_item_data(item_name, item_desc))
+        @world.upsert_item!(@room, @world.create_item_data(item_name, item_desc))
         echo "touched item: ".light_green + item_name
       },
       'cat' => lambda { |item_name|
-        item = @world.get_item_data(@world.current_room, item_name)
+        item = @world.get_item_data(@room, item_name)
         if item
           echo item['desc']
         else
@@ -119,7 +122,7 @@ class Client
           if line =~ /^\:w/
             editing = false
             desc    = colorize_markdown(lines.join("\n"))
-            @world.upsert_item!(@world.current_room, @world.create_item_data(item_name, desc))
+            @world.upsert_item!(@room, @world.create_item_data(item_name, desc))
           elsif line =~ /^\:q/
             editing = false
             echo "canceled without saving".light_red
@@ -129,40 +132,40 @@ class Client
         end
       },
       'rm_item' => lambda { |item_name|
-        if @world.destroy_item!(@world.current_room, item_name)
+        if @world.destroy_item!(@room, item_name)
           echo "destroyed item: ".light_green + item_name
         else
           echo "no item found with name:  ".light_red + item_name
         end
       },
       'remember' => lambda {
-        @world.user.remembered = @world.create_door_data(@world.current_room)
-        @world.user.save!
-        echo "you will remember this room: ".light_green + @world.current_room.name.light_blue
+        @user.remembered = @world.create_door_data(@room)
+        @user.save!
+        echo "you will remember this room: ".light_green + @room.name.light_blue
       },
       'remembered' => lambda {
-        if @world.user.remembered.nil?
+        if @user.remembered.nil?
           echo "you don't remember anything".light_cyan
         else
-          echo "you remember a room: ".light_cyan + @world.user.remembered['room_name'].light_blue
+          echo "you remember a room: ".light_cyan + @user.remembered['room_name'].light_blue
         end
       },
       'make' => lambda { |name, desc='a mob'|
-        @world.current_room.mobs << @world.create_mob_data(name, desc)
-        @world.current_room.save!
+        @room.mobs << @world.create_mob_data(name, desc)
+        @room.save!
         echo "created mob: ".light_green + name
       },
       'link' => lambda {
-        if @world.user.remembered.nil?
+        if @user.remembered.nil?
           puts "You don't remember any rooms to link to".light_red
         else
           room = @world.get_remembered_room
-          @world.create_doors!(@world.current_room, @world.get_remembered_room)
+          @world.create_doors!(@room, @world.get_remembered_room)
           puts "created a link to: ".light_green + room.name
         end
       },
       'rm_mob' => lambda { |name|
-        @world.destroy_mob!(@world.current_room, name)
+        @world.destroy_mob!(@room, name)
       }
     }
 
@@ -195,9 +198,9 @@ class Client
 
   def prompt
     s = ""
-    s << @world.user.name.light_magenta
+    s << @user.name.light_magenta
     s << "@".light_black
-    s << @world.current_room.name.light_blue
+    s << @room.name.light_blue
     s << "> ".light_black
   end
 
@@ -217,7 +220,7 @@ class Client
         end
         next if cmd.nil? or cmd.length==0
         if @cmd[cmd]
-          @world.update_current_room!
+          @room = @world.find_room!(@user._id)
           begin
             @cmd[cmd].call(*args)
           rescue Exception => e

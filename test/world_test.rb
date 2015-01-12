@@ -7,6 +7,9 @@ class WorldTest < Minitest::Test
   def setup
     @world = World.new('testdb')
     @db    = @world.instance_variable_get(:@db)
+    @home  = @world.create_room!('home','home')
+    @user  = @world.create_user!('user','user',@home._id)
+    @room  = @world.find_room!(@user.room_id)
   end
 
   def teardown
@@ -14,12 +17,11 @@ class WorldTest < Minitest::Test
   end
 
   def test_instance_models
-    assert(@world.home._id)
-    assert(@world.user._id) 
+    assert_equal(Db, @db.class)
   end
 
   def test_collection_names
-    assert_equal(3, @world.collection_names.count)
+    assert_equal(2, @world.collection_names.count)
   end
 
   def test_destroy_collections!
@@ -52,21 +54,21 @@ class WorldTest < Minitest::Test
   end
 
   def test_update_current_room!
-    assert_equal('home', @world.current_room.name)
+    assert_equal('home', @room.name)
 
-    data = @db.find!('rooms', @world.current_room._id)
+    data = @db.find!('rooms', @room._id)
     data['color'] = 'blue'
     @db.save!('rooms', data)
 
-    assert_raises(NoMethodError) { @world.current_room.color }
+    assert_raises(NoMethodError) { @room.color }
 
-    @world.update_current_room!
-    assert_equal('blue', @world.current_room.color)
+    @room = @world.find_room!(@user.room_id)
+    assert_equal('blue', @room.color)
   end
 
   def test_save!
     assert_equal(0, @world.get_save_names!.count)
-    save = @world.save!('default')
+    save = @world.save!('default', @home._id, @user._id)
     assert_equal(1, @world.get_save_names!.count)
 
     assert(save.user_id)
@@ -74,40 +76,40 @@ class WorldTest < Minitest::Test
     assert_equal(1, save.rooms.count)
     assert_equal(1, save.users.count)
 
-    @world.save!('save1')
+    @world.save!('save1', @home._id, @user._id)
     assert_equal(2, @world.get_save_names!.count)
 
-    @world.save!('save2')
+    @world.save!('save2', @home._id, @user._id)
     assert_equal(3, @world.get_save_names!.count)
 
-    @world.save!('default')
+    @world.save!('default', @home._id, @user._id)
     assert_equal(3, @world.get_save_names!.count)
   end
 
   def test_load_save!
-    @world.home.items << {'name'=>'shoe', 'desc'=>'a velcro shoe'}
-    @world.home.save!
+    @home.items << {'name'=>'shoe', 'desc'=>'a velcro shoe'}
+    @home.save!
 
-    assert(@world.save!('default'))
+    assert(@world.save!('default', @home._id, @user._id))
 
-    @db.destroy!('rooms', @world.home._id)
+    @db.destroy!('rooms', @home._id)
     assert_equal(0, @world.all_rooms!.count)
 
     assert(@world.load_save!('default'))
     assert_equal(1, @world.all_rooms!.count)
 
-    assert_equal('a velcro shoe', @world.home.items[0]['desc'])
+    assert_equal('a velcro shoe', @home.items[0]['desc'])
 
     assert_equal(false, @world.load_save!('fake_save'))
   end
 
   def test_get_save_names!
     assert_equal(0, @world.get_save_names!.count)
-    @world.save!('default')
+    @world.save!('default', @home._id, @user._id)
     assert_equal(1, @world.get_save_names!.count)
-    @world.save!('default')
+    @world.save!('default', @home._id, @user._id)
     assert_equal(1, @world.get_save_names!.count)
-    @world.save!('another')
+    @world.save!('another', @home._id, @user._id)
     assert_equal(2, @world.get_save_names!.count)
 
     names = @world.get_save_names!
@@ -116,8 +118,8 @@ class WorldTest < Minitest::Test
   end
 
   def test_get_save_id!
-    @world.save!('testworld')
-    10.times.each { |i| @world.save!("save_#{i}") }
+    @world.save!('testworld', @home._id, @user._id)
+    10.times.each { |i| @world.save!("save_#{i}", @home._id, @user._id) }
     id1 = @world.get_save_id!('testworld')
     assert(id1)
     id2 = @world.get_save_id!("save_1")
@@ -127,7 +129,7 @@ class WorldTest < Minitest::Test
   end
 
   def test_destroy_save!
-    assert(@world.save!('world'))
+    assert(@world.save!('world', @home._id, @user._id))
     assert(@world.get_save_id!('world'))
     assert(@world.destroy_save!('world'))
     assert_equal(nil, @world.get_save_id!('world'))
@@ -161,23 +163,23 @@ class WorldTest < Minitest::Test
     end
   end
 
-  def test_get_room_from_door
+  def test_get_room_from_door_name
     room1 = @world.create_room!('room1', 'room one')
-    @world.create_doors!(room1, @world.current_room)
-    @world.update_current_room!
+    @world.create_doors!(room1, @room)
+    @room = @world.find_room!(@user.room_id)
 
-    room = @world.get_room_from_door('room1')
+    room = @world.get_room_from_doors(@room.doors, 'room1')
     assert_equal(room._id,  room1._id)
     assert_equal(room.name, room1.name)
 
-    assert_equal(nil, @world.get_room_from_door('fake_room'))
-    assert_equal(nil, @world.get_room_from_door('fake_room2'))
+    assert_equal(nil, @world.get_room_from_doors(@room.doors, 'fake_room'))
+    assert_equal(nil, @world.get_room_from_doors(@room.doors, 'fake_room2'))
   end
 
   def test_create_door_data
-    door = @world.create_door_data(@world.home)
-    assert_equal('home',          door['room_name'])
-    assert_equal(@world.home._id, door['room_id'])
+    door = @world.create_door_data(@home)
+    assert_equal('home',    door['room_name'])
+    assert_equal(@home._id, door['room_id'])
 
     room = @world.create_room!('library', 'a library')
     door = @world.create_door_data(room)
@@ -190,11 +192,11 @@ class WorldTest < Minitest::Test
     room2 = @world.create_room!('lab',     'a laboratory')
     room3 = @world.create_room!('kitchen', 'a kitchen')
 
-    @world.create_doors!(@world.current_room, room1)
-    @world.create_doors!(@world.current_room, room2)
-    @world.create_doors!(@world.current_room, room3)
+    @world.create_doors!(@room, room1)
+    @world.create_doors!(@room, room2)
+    @world.create_doors!(@room, room3)
 
-    doors = @world.current_room.doors
+    doors = @room.doors
     assert_equal(0,   @world.get_door_index(doors, room1.name))
     assert_equal(1,   @world.get_door_index(doors, room2.name))
     assert_equal(2,   @world.get_door_index(doors, room3.name))
@@ -276,24 +278,24 @@ class WorldTest < Minitest::Test
   end
 
   def test_get_remembered_room
-    assert_equal(nil, @world.get_remembered_room)
+    assert_equal(nil, @world.get_remembered_room(@user))
     
     kitchen = @world.create_room!('kitchen', 'a small kitchen')
-    @world.user.remembered = @world.create_door_data(kitchen)
-    @world.user.save!
+    @user.remembered = @world.create_door_data(kitchen)
+    @user.save!
     
-    room = @world.get_remembered_room
+    room = @world.get_remembered_room(@user)
     assert(room)
-    assert_equal(kitchen._id,  room._id)
-    assert_equal(kitchen.name, room.name)
-    assert_equal(kitchen.desc, room.desc)
+    assert_equal(kitchen._id,   room._id)
+    assert_equal(kitchen.name,  room.name)
+    assert_equal(kitchen.desc,  room.desc)
     assert_equal(kitchen.items, room.items)
     assert_equal(kitchen.mobs,  room.mobs)
   end
 
   def test_all_users!
     assert_equal(1, @world.all_users!.count)
-    10.times.each { |i| @world.create_user!("user_#{i}", "a user", @world.home._id) }
+    10.times.each { |i| @world.create_user!("user_#{i}", "a user", @home._id) }
     users = @world.all_users!
     names = users.map { |u| u.name }
     assert_equal(11, users.count)
@@ -301,18 +303,18 @@ class WorldTest < Minitest::Test
   end
 
   def test_create_user
-    user = @world.create_user('joe', 'man', @world.home._id)
+    user = @world.create_user('joe', 'man', @home._id)
     assert_equal('joe', user.name)
     assert_equal('man', user.desc)
-    assert_equal(@world.home._id, user.room_id)
+    assert_equal(@home._id, user.room_id)
     assert_raises(NoMethodError) { user._id }
   end
 
   def test_create_user!
-    user = @world.create_user!('joe', 'man', @world.home._id)
+    user = @world.create_user!('joe', 'man', @home._id)
     assert_equal('joe', user.name)
     assert_equal('man', user.desc)
-    assert_equal(@world.home._id, user.room_id)
+    assert_equal(@home._id, user.room_id)
     assert(user._id)
     assert(@db.find!('users', user._id))
   end
@@ -329,17 +331,17 @@ class WorldTest < Minitest::Test
 
     data = { 'health' => 5 }
     user = @world.create_user_from_data(data)
-    assert_equal('user',          user.name)
-    assert_equal('a user',        user.desc)
-    assert_equal(@world.home._id, user.room_id)
-    assert_equal(5,               user.health)
+    assert_equal('user',    user.name)
+    assert_equal('a user',  user.desc)
+    assert_equal(nil,       user.room_id)
+    assert_equal(5,         user.health)
     assert_raises(NoMethodError) { user._id }
 
     data = {}
     user = @world.create_user_from_data(data)
-    assert_equal('user',          user.name)
-    assert_equal('a user',        user.desc)
-    assert_equal(@world.home._id, user.room_id)
+    assert_equal('user',    user.name)
+    assert_equal('a user',  user.desc)
+    assert_equal(nil,       user.room_id)
     assert_raises(NoMethodError) { user._id    }
     assert_raises(NoMethodError) { user.health }
   end
@@ -351,49 +353,49 @@ class WorldTest < Minitest::Test
   end
 
   def test_get_item_data
-    assert_equal(nil, @world.get_item_data(@world.home, 'fake1'))
+    assert_equal(nil, @world.get_item_data(@home, 'fake1'))
 
-    @world.home.items << @world.create_item_data('spoon', 'a spoon')
-    @world.home.save!
+    @home.items << @world.create_item_data('spoon', 'a spoon')
+    @home.save!
 
-    assert_equal(nil, @world.get_item_data(@world.home, 'fake2'))
-    assert_equal('a spoon', @world.get_item_data(@world.home, 'spoon')['desc'])
+    assert_equal(nil, @world.get_item_data(@home, 'fake2'))
+    assert_equal('a spoon', @world.get_item_data(@home, 'spoon')['desc'])
   end
 
   def test_get_item_index
-    assert_equal(nil, @world.get_item_index(@world.home, 'fake1'))
-    10.times.each { |i| @world.upsert_item!(@world.home, @world.create_item_data("item_#{i}", "an item")) }
-    10.times.each { |i| assert_equal(i, @world.get_item_index(@world.home, "item_#{i}")) }
-    assert_equal(nil, @world.get_item_index(@world.home, 'fake1'))
+    assert_equal(nil, @world.get_item_index(@home, 'fake1'))
+    10.times.each { |i| @world.upsert_item!(@home, @world.create_item_data("item_#{i}", "an item")) }
+    10.times.each { |i| assert_equal(i, @world.get_item_index(@home, "item_#{i}")) }
+    assert_equal(nil, @world.get_item_index(@home, 'fake1'))
   end
 
   def test_upsert_item!
-    assert_equal(0, @world.home.items.count)
+    assert_equal(0, @home.items.count)
 
     data = @world.create_item_data('shoe', 'a shoe')
-    @world.upsert_item!(@world.home, data)
-    assert_equal(1, @world.home.items.count)
+    @world.upsert_item!(@home, data)
+    assert_equal(1, @home.items.count)
 
     data['desc'] = 'a stuffed clown toy'
-    @world.upsert_item!(@world.home, data)
+    @world.upsert_item!(@home, data)
 
-    assert_equal(1, @world.home.items.count)
+    assert_equal(1, @home.items.count)
 
-    found = @world.get_item_data(@world.home, 'shoe')
+    found = @world.get_item_data(@home, 'shoe')
     assert_equal(found['desc'], 'a stuffed clown toy')
 
-    @world.upsert_item!(@world.home, {'name'=>'box', 'desc'=>'a box'})
-    assert_equal(2, @world.home.items.count)
+    @world.upsert_item!(@home, {'name'=>'box', 'desc'=>'a box'})
+    assert_equal(2, @home.items.count)
   end
 
   def test_destroy_item!
-    assert_equal(0, @world.home.items.count)
-    @world.upsert_item!(@world.home, {'name'=>'box', 'desc'=>'a box'})
-    assert_equal(1, @world.home.items.count)
-    assert(@world.destroy_item!(@world.home, 'box'))
-    assert_equal(0, @world.home.items.count)
-    10.times.each { assert_equal(false, @world.destroy_item!(@world.home, 'box')) }
-    assert_equal(0, @world.home.items.count)
+    assert_equal(0, @home.items.count)
+    @world.upsert_item!(@home, {'name'=>'box', 'desc'=>'a box'})
+    assert_equal(1, @home.items.count)
+    assert(@world.destroy_item!(@home, 'box'))
+    assert_equal(0, @home.items.count)
+    10.times.each { assert_equal(false, @world.destroy_item!(@home, 'box')) }
+    assert_equal(0, @home.items.count)
   end
 
   def test_create_mob_data
@@ -402,34 +404,34 @@ class WorldTest < Minitest::Test
   end
 
   def test_upsert_mob!
-    assert_equal(0, @world.home.mobs.count)
+    assert_equal(0, @home.mobs.count)
 
-    10.times.each { |i| @world.upsert_mob!(@world.home, @world.create_mob_data("mob_#{i}", "a mob")) }
-    assert_equal(10, @world.home.mobs.count)
+    10.times.each { |i| @world.upsert_mob!(@home, @world.create_mob_data("mob_#{i}", "a mob")) }
+    assert_equal(10, @home.mobs.count)
 
-    10.times.each { |i| @world.upsert_mob!(@world.home, @world.create_mob_data("mob_#{i}", "a big mob")) }
-    assert_equal(10, @world.home.mobs.count)
+    10.times.each { |i| @world.upsert_mob!(@home, @world.create_mob_data("mob_#{i}", "a big mob")) }
+    assert_equal(10, @home.mobs.count)
 
-    10.times.each { |i| @world.upsert_mob!(@world.home, @world.create_mob_data("happy_mob_#{i}", "a happy mob")) }
-    assert_equal(20, @world.home.mobs.count)
+    10.times.each { |i| @world.upsert_mob!(@home, @world.create_mob_data("happy_mob_#{i}", "a happy mob")) }
+    assert_equal(20, @home.mobs.count)
   end
 
   def test_get_mob_index
-    10.times.each { |i| @world.upsert_mob!(@world.home, @world.create_mob_data("mob_#{i}", "a mob")) }
-    10.times.each { |i| assert_equal(i, @world.get_mob_index(@world.home, "mob_#{i}")) }
-    assert_equal(nil, @world.get_mob_index(@world.home, "fake"))
+    10.times.each { |i| @world.upsert_mob!(@home, @world.create_mob_data("mob_#{i}", "a mob")) }
+    10.times.each { |i| assert_equal(i, @world.get_mob_index(@home, "mob_#{i}")) }
+    assert_equal(nil, @world.get_mob_index(@home, "fake"))
   end
 
   def test_destroy_mob!
-    assert_equal(0, @world.home.mobs.count)
+    assert_equal(0, @home.mobs.count)
 
-    10.times.each { |i| @world.upsert_mob!(@world.home, @world.create_mob_data("mob_#{i}", "a mob")) }
-    assert_equal(10, @world.home.mobs.count)
+    10.times.each { |i| @world.upsert_mob!(@home, @world.create_mob_data("mob_#{i}", "a mob")) }
+    assert_equal(10, @home.mobs.count)
 
-    10.times.each { |i| assert(@world.destroy_mob!(@world.home, "mob_#{i}")) }
-    assert_equal(0, @world.home.mobs.count)
+    10.times.each { |i| assert(@world.destroy_mob!(@home, "mob_#{i}")) }
+    assert_equal(0, @home.mobs.count)
 
-    10.times.each { |i| assert_equal(false, @world.destroy_mob!(@world.home, "fake_#{i}")) }
+    10.times.each { |i| assert_equal(false, @world.destroy_mob!(@home, "fake_#{i}")) }
   end
 
 end

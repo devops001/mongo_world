@@ -3,30 +3,22 @@ require_relative 'db'
 require_relative 'model'
 
 class World
-  attr_reader :home, :user, :current_room
 
   def initialize(dbname)
     @dbname = dbname
     @db     = Db.new(dbname)
-    @home   = create_room!('home', 'a home')
-    @user   = create_user!('user', 'a user', @home._id)
-    update_current_room!
-  end
-
-  def update_current_room!
-    @current_room = Model.new(@db, 'rooms', @user.room_id)
   end
 
   ########################
   ## saving:
   ########################
 
-  def save!(saved_name)
+  def save!(saved_name, home_id, user_id)
     saved          = Model.new(@db, 'saves', get_save_id!(saved_name))
     saved.rooms    = @db.all!('rooms')
     saved.users    = @db.all!('users')
-    saved.user_id  = @user._id
-    saved.home_id  = @home._id
+    saved.user_id  = user_id
+    saved.home_id  = home_id
     saved.name     = saved_name
     saved.saved_at = Time.now
     saved.save!
@@ -44,10 +36,7 @@ class World
     saved.users.each do |user_data|
       @db.save!('users', user_data)
     end
-    @home = Model.new(@db, 'rooms', saved.home_id)
-    @user = Model.new(@db, 'users', saved.user_id)
-    @current_room = Model.new(@db, 'rooms', @user.room_id)
-    true
+    saved
   end
 
   def get_save_names!
@@ -106,9 +95,9 @@ class World
     end
   end
 
-  def get_room_from_door(room_name)
-    index = get_door_index(@current_room.doors, room_name)
-    index.nil? ? nil : Model.new(@db, 'rooms', @current_room.doors[index]['room_id'])
+  def get_room_from_doors(doors, room_name)
+    index = get_door_index(doors, room_name)
+    index.nil? ? nil : Model.new(@db, 'rooms', doors[index]['room_id'])
   end
 
   def create_door_data(room)
@@ -139,7 +128,7 @@ class World
   end
 
   def collection_names
-    %w/rooms users items/
+    %w/rooms users/
   end
 
   def destroy_collections!
@@ -191,9 +180,9 @@ class World
     room
   end
 
-  def get_remembered_room
-    return nil if @user.remembered.nil?
-    find_room!(@user.remembered['room_id'])
+  def get_remembered_room(user)
+    return nil if user.remembered.nil?
+    find_room!(user.remembered['room_id'])
   end
 
   ########################
@@ -224,7 +213,7 @@ class World
   end
 
   def create_user_from_data(data)
-    user = create_user('user', 'a user', @home._id)
+    user = create_user('user', 'a user', nil)
     data.each_pair do |key,val|
       user.send("#{key}=", val)
     end
