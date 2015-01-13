@@ -12,8 +12,7 @@ class Client
 
     @home = @world.create_room!('home', 'home')
     @user = @world.create_user!('user', 'user', @home._id)
-    update_current_room!
-
+    @room = @home
 
     @cmd = {
       'exit' => lambda { 
@@ -86,10 +85,10 @@ class Client
         echo "created room: ".light_green + name
       },
       'rmdir' => lambda { |name|
-        room = @world.get_room_from_door(name)
+        room = @world.get_room_from_doors(@room.doors, name)
         if room
           @world.remove_doors!(room, @room)
-          echo "removed door to: ".light_green + name
+          echo "removed door: ".light_green + name
         else
           echo "no door found for name: ".light_red + name
         end

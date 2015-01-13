@@ -80,31 +80,27 @@ class ClientTest < Minitest::Test
   end
 
   def test_update_current_room!
-    room = @client.instance_variable_get(:@room)
+    assert_equal('home', current_room.name)
+    assert_equal(0, current_room.doors.count)
+    assert_equal(0, current_room.items.count)
+    assert_equal(0, current_room.mobs.count)
 
-    assert_equal('home', room.name)
-    assert_equal(0, room.doors.count)
-    assert_equal(0, room.items.count)
-    assert_equal(0, room.mobs.count)
-
-    r = Model.new(@db, 'rooms', room._id)
+    r = Model.new(@db, 'rooms', current_room._id)
     r.items << @world.create_item_data('book', 'a book')
     r.mobs  << @world.create_mob_data('dog', 'a dog')
     r.save!
 
-    room = @client.instance_variable_get(:@room)
-    assert_equal('home', room.name)
-    assert_equal(0, room.doors.count)
-    assert_equal(0, room.items.count)
-    assert_equal(0, room.mobs.count)
+    assert_equal('home', current_room.name)
+    assert_equal(0, current_room.doors.count)
+    assert_equal(0, current_room.items.count)
+    assert_equal(0, current_room.mobs.count)
 
     @client.update_current_room!
 
-    room = @client.instance_variable_get(:@room)
-    assert_equal('home', room.name)
-    assert_equal(0, room.doors.count)
-    assert_equal(1, room.items.count)
-    assert_equal(1, room.mobs.count)
+    assert_equal('home', current_room.name)
+    assert_equal(0, current_room.doors.count)
+    assert_equal(1, current_room.items.count)
+    assert_equal(1, current_room.mobs.count)
   end
 
   def test_cmd_exit
@@ -149,13 +145,11 @@ class ClientTest < Minitest::Test
   end
 
   def test_cmd_load_save
-    room = @client.instance_variable_get(:@room)
     @cmd['save'].call
     @cmd['mkdir'].call('room2','a room')
-    assert_equal(1, room.doors.count)
+    assert_equal(1, current_room.doors.count)
     @cmd['load_save'].call
-    room = @client.instance_variable_get(:@room)
-    assert_equal(0, room.doors.count)
+    assert_equal(0, current_room.doors.count)
   end
 
   def test_cmd_rm_save
@@ -195,12 +189,47 @@ class ClientTest < Minitest::Test
   end
 
   def test_cmd_cd
+    @cmd['mkdir'].call('room1', 'a room')
+    hash = eval(get_cmd_output('room').out)
+    assert_equal('home',  hash['name'])
+    assert_equal('room1', hash['doors'][0]['room_name'])
+
+    @cmd['cd'].call('room1')
+    hash = eval(get_cmd_output('room').out)
+    assert_equal('room1', hash['name'])
+    assert_equal('home',  hash['doors'][0]['room_name'])
+
+    @cmd['cd'].call
+    hash = eval(get_cmd_output('room').out)
+    assert_equal('home',  hash['name'])
+    assert_equal('room1', hash['doors'][0]['room_name'])
   end
 
   def test_cmd_mkdir
+    10.times.each { |i| @cmd['mkdir'].call("room_#{i}", "a room") }
+    rooms = @world.all_rooms!
+    assert_equal(11, rooms.count)
+
+    names = rooms.map { |r| r.name }
+    10.times.each { |i| assert(names.include?("room_#{i}")) }
   end
 
   def test_cmd_rmdir
+    10.times.each { |i| @cmd['mkdir'].call("room_#{i}", "a room") }
+    names = current_room.doors.map { |r| r['room_name'] }
+    10.times.each { |i| assert(names.include?("room_#{i}")) }
+
+    @cmd['rmdir'].call('room_9')
+    names = current_room.doors.map { |r| r['room_name'] }
+    assert_equal(false, names.include?('room_9'))
+
+    @cmd['rmdir'].call('room_3')
+    names = current_room.doors.map { |r| r['room_name'] }
+    assert_equal(false, names.include?('room_3'))
+
+    @cmd['rmdir'].call('room_1')
+    names = current_room.doors.map { |r| r['room_name'] }
+    assert_equal(false, names.include?('room_1'))
   end
 
   def test_cmd_desc
@@ -245,6 +274,10 @@ class ClientTest < Minitest::Test
       end
       @client.instance_variable_set(:@use_stdout, false)
       Output.new(out,err)
+    end
+
+    def current_room
+      @client.instance_variable_get(:@room)
     end
 
 end
