@@ -265,16 +265,17 @@ class ClientTest < Minitest::Test
   end
 
   def test_cmd_vi
-    with_stdin do |input|
+    with_io_pipes do |input,output|
+      puts "in block. classes: #{input.class.name}, #{output.class.name}"
       input.puts "A Song of [blue]ice[/] and [red]Fire[/]"
       input.puts "by [green]G.R.R.M[/]"
       input.puts ":w"
       @cmd['vi'].call('book')
     end
-
     item = current_room.items[0]
     assert_equal(1, current_room.items.count)
-    assert_equal("", item['desc'])
+    expect = "A Song of \e[0;34;49mice\e[0m and \e[0;31;49mFire\e[0m\nby \e[0;32;49mG.R.R.M\e[0m"
+    assert_equal(expect, item['desc'])
   end
 
   def test_cmd_rm_item
@@ -313,12 +314,16 @@ class ClientTest < Minitest::Test
       @client.instance_variable_get(:@room)
     end
 
-    def with_stdin
-      stdin = $stdin             # remember $stdin
-      $stdin, write = IO.pipe    # create pipe assigning its "read end" to $stdin
-      yield write                # pass pipe's "write end" to block
+    def with_io_pipes
+      stdout = $stdout            # remember $stdout
+      stdin  = $stdin             # remember $stdin
+      output, $stdout = IO.pipe
+      $stdin, input   = IO.pipe   # create pipe with a handle to $stdin
+      yield input, output         # pass pipe handles to block
     ensure
-      write.close                # close pipe
-      $stdin = stdin             # restore $stdin
+      input.close                 # close pipe
+      output.close                # close pipe
+      $stdin  = stdin             # restore $stdin
+      $stdout = stdout            # restore $stdout
     end
 end
