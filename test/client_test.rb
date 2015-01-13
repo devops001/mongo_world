@@ -7,6 +7,9 @@ class Output
     @out = out
     @err = err
   end
+  def to_s
+    @out
+  end
 end
 
 class ClientTest < Minitest::Test
@@ -233,15 +236,45 @@ class ClientTest < Minitest::Test
   end
 
   def test_cmd_desc
+    assert_equal('home', current_room.desc)
+    @cmd['desc'].call('a data center')
+    assert_equal('a data center', current_room.desc)
+    @cmd['desc'].call('a lion den')
+    assert_equal('a lion den', current_room.desc)
   end
 
   def test_cmd_touch
+    assert_equal(0, current_room.items.count)
+    @cmd['touch'].call('book','a book')
+    assert_equal(1, current_room.items.count)
+    @cmd['touch'].call('banana','a banana')
+    assert_equal(2, current_room.items.count)
+
+    names = current_room.items.map { |i| i['name'] }
+    assert(names.include?('book'))
+    assert(names.include?('banana'))
   end
 
   def test_cmd_cat
+    title = 'an idiots guide to unit testing'
+    @cmd['touch'].call('book', title)
+    assert_equal("#{title}\n", get_cmd_output('cat', 'book').out)
+
+    expect = "\e[0;91;49mno item found with name: \e[0mfake\n"
+    assert_equal(expect, get_cmd_output('cat', 'fake').out)
   end
 
   def test_cmd_vi
+    with_stdin do |input|
+      input.puts "A Song of [blue]ice[/] and [red]Fire[/]"
+      input.puts "by [green]G.R.R.M[/]"
+      input.puts ":w"
+      @cmd['vi'].call('book')
+    end
+
+    item = current_room.items[0]
+    assert_equal(1, current_room.items.count)
+    assert_equal("", item['desc'])
   end
 
   def test_cmd_rm_item
@@ -280,4 +313,12 @@ class ClientTest < Minitest::Test
       @client.instance_variable_get(:@room)
     end
 
+    def with_stdin
+      stdin = $stdin             # remember $stdin
+      $stdin, write = IO.pipe    # create pipe assigning its "read end" to $stdin
+      yield write                # pass pipe's "write end" to block
+    ensure
+      write.close                # close pipe
+      $stdin = stdin             # restore $stdin
+    end
 end
