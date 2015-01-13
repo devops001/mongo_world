@@ -12,6 +12,7 @@ class ClientTest < Minitest::Test
   end
 
   def teardown
+    @client.instance_variable_set(:@user_stdout, false)
     @world.destroy_database!
   end
 
@@ -96,6 +97,94 @@ class ClientTest < Minitest::Test
     assert_equal(0, room.doors.count)
     assert_equal(1, room.items.count)
     assert_equal(1, room.mobs.count)
+  end
+
+  def test_cmd_exit
+    assert_equal(false, @client.instance_variable_get(:@is_running))
+    @client.instance_variable_set(:@is_running, true)
+    assert_equal(true, @client.instance_variable_get(:@is_running))
+    @cmd['exit'].call
+    assert_equal(false, @client.instance_variable_get(:@is_running))
+  end
+
+  def test_cmd_clear
+    @client.instance_variable_set(:@use_stdout, true)
+    out,err = capture_io do
+      @cmd['clear'].call
+    end
+    assert_equal("\e[H\e[2J\n", out)
+  end
+
+  def test_cmd_room
+    @client.instance_variable_set(:@use_stdout, true)
+    out,err = capture_io do
+      @cmd['room'].call
+    end
+    hash = eval(out)
+    assert_equal("home", hash['name'])
+    assert_equal([], hash['items'])
+    assert_equal([], hash['doors'])
+    assert_equal([], hash['mobs'])
+  end
+
+  def test_cmd_save
+  end
+
+  def test_cmd_ls_saves
+  end
+
+  def test_cmd_load_save
+  end
+
+  def test_cmd_rm_save
+  end
+
+  def test_cmd_debug
+  end
+
+  def test_cmd_ls
+  end
+
+  def test_cmd_cd
+  end
+
+  def test_cmd_mkdir
+  end
+
+  def test_cmd_rmdir
+  end
+
+  def test_cmd_desc
+  end
+
+  def test_cmd_touch
+  end
+
+  def test_cmd_cat
+  end
+
+  def test_cmd_vi
+  end
+
+  def test_cmd_rm_item
+  end
+
+  def test_cmd_remember
+  end
+
+  def test_cmd_remembered
+  end
+
+  def test_cmd_make
+  end
+
+  def test_cmd_link
+  end
+
+  def test_cmd_rm_mob
+  end
+
+  def test_cmd_help
   end
 
 end
