@@ -317,6 +317,12 @@ class WorldTest < Minitest::Test
     assert_equal(@home._id, user.room_id)
     assert(user._id)
     assert(@db.find!('users', user._id))
+
+    10.times.each do |i|
+      user = @world.create_user!("user_#{i}", "a user", @home._id)
+      assert(user._id)
+      assert(@db.find!('users', user._id))
+    end
   end
 
   def test_create_user_from_data
@@ -347,7 +353,20 @@ class WorldTest < Minitest::Test
   end
 
   def test_find_user!
-    assert(false, 'not implemented yet')
+    users = []
+    10.times.each do |i| 
+      users << @world.create_user!("user_#{i}", "a user", @home._id)
+    end
+    10.times.each do |i|
+      user = @world.find_user!(users[i]._id)
+      assert(user)
+      assert_equal(users[i]._id,  user._id)
+      assert_equal(users[i].name, user.name)
+      assert_equal(users[i].desc, user.desc)
+    end
+    10.times.each do |i|
+      assert_equal(nil, @world.find_user!(i))
+    end
   end
 
   def test_create_item_data
