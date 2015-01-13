@@ -1,6 +1,14 @@
 
 require_relative '../lib/client'
 
+class Output
+  attr_accessor :out, :err
+  def initialize(out, err)
+    @out = out
+    @err = err
+  end
+end
+
 class ClientTest < Minitest::Test
 
   def setup
@@ -108,19 +116,11 @@ class ClientTest < Minitest::Test
   end
 
   def test_cmd_clear
-    @client.instance_variable_set(:@use_stdout, true)
-    out,err = capture_io do
-      @cmd['clear'].call
-    end
-    assert_equal("\e[H\e[2J\n", out)
+    assert_equal("\e[H\e[2J\n", get_cmd_output('clear').out)
   end
 
   def test_cmd_room
-    @client.instance_variable_set(:@use_stdout, true)
-    out,err = capture_io do
-      @cmd['room'].call
-    end
-    hash = eval(out)
+    hash = eval(get_cmd_output('room').out)
     assert_equal("home", hash['name'])
     assert_equal([], hash['items'])
     assert_equal([], hash['doors'])
@@ -128,21 +128,70 @@ class ClientTest < Minitest::Test
   end
 
   def test_cmd_save
+    assert_equal(0, @db.all!('saves').count)
+    5.times.each { @cmd['save'].call }
+    assert_equal(1, @db.all!('saves').count)
+    5.times.each { @cmd['save'].call('myworld') }
+    assert_equal(2, @db.all!('saves').count)
   end
 
   def test_cmd_ls_saves
+    assert_equal("\n", get_cmd_output('ls_saves').out)
+
+    @cmd['save'].call
+    assert_equal("default\n", get_cmd_output('ls_saves').out)
+
+    @cmd['save'].call('world32')
+    assert_equal("default, world32\n", get_cmd_output('ls_saves').out)
+
+    @cmd['save'].call('aardvark_heaven')
+    assert_equal("aardvark_heaven, default, world32\n", get_cmd_output('ls_saves').out)
   end
 
   def test_cmd_load_save
+    room = @client.instance_variable_get(:@room)
+    @cmd['save'].call
+    @cmd['mkdir'].call('room2','a room')
+    assert_equal(1, room.doors.count)
+    @cmd['load_save'].call
+    room = @client.instance_variable_get(:@room)
+    assert_equal(0, room.doors.count)
   end
 
   def test_cmd_rm_save
+    @cmd['save'].call
+    assert_equal("default\n", get_cmd_output('ls_saves').out)
+    @cmd['rm_save'].call('default')
+    assert_equal("\n", get_cmd_output('ls_saves').out)
   end
 
   def test_cmd_debug
+    assert_equal(false, @db.debug?)
+    @cmd['debug'].call
+    assert_equal(true, @db.debug?)
+    @cmd['debug'].call
+    assert_equal(false, @db.debug?)
   end
 
   def test_cmd_ls
+    expect = "\e[0;94;49mhome\e[0m\e[0;90;49m: \e[0m\e[0;37;49mhome\e[0m\n"
+    doors  = "\e[0;90;49mdoors: [\e[0m\e[0;94;49mroom1\e[0m\e[0;90;49m]\e[0m\n"
+    mobs   = "\e[0;90;49mmobs: [\e[0m\e[0;91;49mdog\e[0m\e[0;90;49m]\e[0m\n"
+    items  = "\e[0;90;49mitems: [\e[0m\e[0;93;49mbook\e[0m\e[0;90;49m]\e[0m\n"
+
+    assert_equal(expect, get_cmd_output('ls').out)
+
+    @cmd['mkdir'].call('room1', 'a room')
+    expect = "#{expect}#{doors}"
+    assert_equal(expect, get_cmd_output('ls').out)
+
+    @cmd['touch'].call('book', 'a book')
+    expect = "#{expect}#{items}"
+    assert_equal(expect, get_cmd_output('ls').out)
+
+    @cmd['make'].call('dog', 'a dog')
+    expect = "#{expect}#{mobs}"
+    assert_equal(expect, get_cmd_output('ls').out)
   end
 
   def test_cmd_cd
@@ -186,5 +235,16 @@ class ClientTest < Minitest::Test
 
   def test_cmd_help
   end
+
+  private
+
+    def get_cmd_output(cmd, *args)
+      @client.instance_variable_set(:@use_stdout, true)
+      out,err = capture_io do
+        @cmd[cmd].call(*args)
+      end
+      @client.instance_variable_set(:@use_stdout, false)
+      Output.new(out,err)
+    end
 
 end

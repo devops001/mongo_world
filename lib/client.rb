@@ -29,7 +29,7 @@ class Client
         @world.save!(name, @home._id, @user._id) 
       },
       'ls_saves' => lambda { 
-        echo @world.get_save_names!.join(', ')
+        echo @world.get_save_names!.sort.join(', ')
       },
       'load_save' => lambda { |name='default'| 
         saved = @world.load_save!(name) 
