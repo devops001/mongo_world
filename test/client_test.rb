@@ -266,7 +266,6 @@ class ClientTest < Minitest::Test
 
   def test_cmd_vi
     with_io_pipes do |input,output|
-      puts "in block. classes: #{input.class.name}, #{output.class.name}"
       input.puts "A Song of [blue]ice[/] and [red]Fire[/]"
       input.puts "by [green]G.R.R.M[/]"
       input.puts ":w"
@@ -279,18 +278,66 @@ class ClientTest < Minitest::Test
   end
 
   def test_cmd_rm_item
+    @cmd['touch'].call('book1', 'a book')
+    assert_equal(1, current_room.items.count)
+    assert_equal('book1', current_room.items[0]['name'])
+    @cmd['rm_item'].call('book1')
+    assert_equal(0, current_room.items.count)
+    @cmd['rm_item'].call('book2')
+    assert_equal(0, current_room.items.count)
   end
 
   def test_cmd_remember
+
+    @cmd['mkdir'].call('room4','a room')
+    @cmd['cd'].call('room4')
+
+    output = get_cmd_output('remember')
+    expect = "\e[0;92;49myou will remember this room: \e[0m\e[0;94;49mroom4\e[0m\n"
+
+    assert_equal(expect, output.out)
   end
 
   def test_cmd_remembered
+    assert_equal(nil, current_user.remembered)
+    10.times.each do |i|
+      @cmd['mkdir'].call("room_#{i}",'a room')
+      @cmd['cd'].call("room_#{i}")
+      @cmd['remember'].call
+      assert_equal(@world.create_door_data(current_room), current_user.remembered)
+    end
   end
 
   def test_cmd_make
+    assert_equal(0, current_room.mobs.count)
+    10.times.each do |i|
+      @cmd['make'].call("dog#{i}", "a dog")
+    end
+    assert_equal(10, current_room.mobs.count)
+    names = current_room.mobs.map { |m| m['name'] }
+    10.times.each do |i|
+      assert(names.include?("dog#{i}"))
+    end
   end
 
   def test_cmd_link
+    output = get_cmd_output('link')
+    expect = "\e[0;91;49mYou don't remember any rooms to link to\e[0m\n"
+    assert_equal(expect, output.out)
+
+    @cmd['mkdir'].call('kitchen','a room')
+    @cmd['cd'].call('room1')
+    @cmd['remember'].call
+
+    @cmd['cd'].call
+    10.times.each do |i|
+      @cmd['mkdir'].call("room_#{i}",'a room')
+      @cmd['cd'].call("room_#{i}")
+    end
+
+    output = get_cmd_output('link')
+    expect = ""
+    assert_equal(expect, output.out)
   end
 
   def test_cmd_rm_mob
@@ -312,6 +359,10 @@ class ClientTest < Minitest::Test
 
     def current_room
       @client.instance_variable_get(:@room)
+    end
+
+    def current_user
+      @client.instance_variable_get(:@user)
     end
 
     def with_io_pipes
