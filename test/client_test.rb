@@ -326,7 +326,7 @@ class ClientTest < Minitest::Test
     assert_equal(expect, output.out)
 
     @cmd['mkdir'].call('kitchen','a room')
-    @cmd['cd'].call('room1')
+    @cmd['cd'].call('kitchen')
     @cmd['remember'].call
 
     @cmd['cd'].call
@@ -336,7 +336,7 @@ class ClientTest < Minitest::Test
     end
 
     output = get_cmd_output('link')
-    expect = ""
+    expect = "\e[0;92;49mcreated a link to: \e[0mkitchen\n"
     assert_equal(expect, output.out)
   end
 

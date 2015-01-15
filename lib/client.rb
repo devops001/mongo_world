@@ -162,8 +162,8 @@ class Client
         if @user.remembered.nil?
           puts "You don't remember any rooms to link to".light_red
         else
-          room = @world.get_remembered_room
-          @world.create_doors!(@room, @world.get_remembered_room)
+          room = @world.get_remembered_room(@user)
+          @world.create_doors!(@room, room)
           puts "created a link to: ".light_green + room.name
         end
       },
