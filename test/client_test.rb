@@ -356,6 +356,11 @@ class ClientTest < Minitest::Test
   end
 
   def test_cmd_help
+    output  = get_cmd_output('help')
+    expect  = "Commands: cat, cd, clear, debug, desc, exit, help, link, load_save, "
+    expect += "ls, ls_saves, make, mkdir, quit, remember, remembered, rm_item, rm_mob, "
+    expect += "rm_save, rmdir, room, save, touch, vi\n"
+    assert_equal(expect, output.out)
   end
 
   private
