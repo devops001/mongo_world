@@ -168,7 +168,11 @@ class Client
         end
       },
       'rm_mob' => lambda { |name|
-        @world.destroy_mob!(@room, name)
+        if @world.destroy_mob!(@room, name)
+          echo "destroyed mob: ".light_green + name
+        else
+          echo "no mob found named: ".light_red + name
+        end
       }
     }
 

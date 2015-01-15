@@ -341,6 +341,18 @@ class ClientTest < Minitest::Test
   end
 
   def test_cmd_rm_mob
+    10.times.each do |i|
+      @cmd['make'].call("dog_#{i}", "a dog")
+    end
+    assert_equal(10, current_room.mobs.count)
+    
+    output = get_cmd_output('rm_mob', 'dog_5')
+    expect = "\e[0;92;49mdestroyed mob: \e[0mdog_5\n"
+    assert_equal(expect, output.out)
+
+    output = get_cmd_output('rm_mob', 'dog_5')
+    expect = "\e[0;91;49mno mob found named: \e[0mdog_5\n"
+    assert_equal(expect, output.out)
   end
 
   def test_cmd_help
